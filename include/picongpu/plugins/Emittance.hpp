@@ -195,23 +195,13 @@ namespace picongpu
                             //    float_X( particles::TYPICAL_NUM_PARTICLES_PER_MACROPARTICLE );
                             float3_X const mom = particle[ momentum_ ] / weighting;
                             float3_X const pos = particle[ position_ ];
-                            //const lcellId_t frameCellNr = particle[localCellIdx_];
                             lcellId_t const cellIdx = particle[ localCellIdx_ ];
                             const DataSpace<simDim> frameCellOffset(DataSpaceOperations<simDim>::template map<MappingDesc::SuperCellSize > (cellIdx));
                             auto globalCellOffset = globalOffset 
 													+ (superCellIdx - mapper.getGuardingSuperCells()) * MappingDesc::SuperCellSize::toRT()
 								                    + frameCellOffset;
-								
-							//const pmacc::math::UInt32<simDim> cellIdx( pmacc::math::MapToPos<simDim>()( SuperCellSize(), frameCellNr ) );
-
-							// calculate global position
-
-							
 							const float_X posX = ( float_X( globalCellOffset.x() ) + pos.x() ) * cellSize.x();
-						
-                            
-                            //float_X const mass = attribute::getMass(weighting,particle);
-                            
+
                             atomicAdd( &(shCount_e), weighting, ::alpaka::hierarchy::Threads{});
                             //weighted sum of single Electron values (Momentum = particle_momentum/normedWeighting)
                             atomicAdd( &(shSumMom2), mom.x() * mom.x() * weighting, ::alpaka::hierarchy::Threads{});
@@ -606,10 +596,6 @@ namespace picongpu
                 outFile.precision( dbl::digits10 );
                 outFile << currentStep << " "
                         << std::scientific
-                        << numElec << "(count_e ) "
-                        << xux << "(x*ux) "
-                        << ux2  << "(ux2) "
-                        << pos2_SI << "(pos2) "
                         << algorithms::math::sqrt((pos2_SI * ux2 - xux * xux)) <<  std::endl;                     
             }
         }
