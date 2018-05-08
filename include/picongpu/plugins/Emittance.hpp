@@ -575,13 +575,14 @@ namespace picongpu
 			//const uint32_t numSlides = MovingWindow::getInstance().getSlideCounter(currentStep);
 			const SubGrid<simDim>& subGrid = Environment<simDim>::get().SubGrid();
 			const int subGridY = subGrid.getGlobalDomain().size.y();
-			auto movingWindow=MovingWindow::getInstance().getDomainAsWindow(currentStep);
+			auto movingWindow=MovingWindow::getInstance().getWindow(currentStep);
 			DataSpace<simDim> globalOffset(subGrid.getLocalDomain().offset);
 			globalOffset.y() -= movingWindow.globalDimensions.offset.y();
 			//globalOffset.y() += (localSize.y() * numSlides);
 			
 			std::cout << "debug emitt: \t" <<  currentStep << "\t" 
 					  << movingWindow.globalDimensions.offset.y() << "\t"
+					  << movingWindow.localDimensions.offset.y() << "\t"
 					  << globalOffset.y() << std::endl;
             
             auto binaryKernel = std::bind(
