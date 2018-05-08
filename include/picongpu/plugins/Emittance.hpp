@@ -1,6 +1,6 @@
 /* Copyright 2013-2018 Axel Huebl, Felix Schmitt, Heiko Burau,
  *                     Rene Widera, Richard Pausch, Benjamin Worpitz,
- * 					   Sophie Kossagk
+ *                     Sophie Kossagk
  *
  * This file is part of PIConGPU.
  *
@@ -62,7 +62,7 @@ namespace picongpu
     struct KernelCalcEmittance
     {
 
-        /** calculates the sum of x², ux² and (x*ux)² and counts electrons
+        /** calculates the sum of x**2, ux**2 and (x*ux)**2 and counts electrons
          *
          * @tparam T_ParBox pmacc::ParticlesBox, particle box type
          * @tparam T_DBox pmacc::DataBox, type of the memory box for the reduced values
@@ -70,7 +70,7 @@ namespace picongpu
          *
          * @param pb particle memory
          * @param gSum storage for the reduced values
-         *                (two elements 0 == sum of x²; 1 == sum of ux²; 2 == sum of (x*ux)²; 3 == counts electrons)
+         *                (four elements 0 == sum of x**2; 1 == sum of ux**2; 2 == sum of (x*ux)**2; 3 == counts electrons)
          * @param mapper functor to map a block to a supercell
          */
         template<
@@ -100,7 +100,7 @@ namespace picongpu
 
             using FramePtr = typename T_ParBox::FramePtr;
 
-            // shared sums of x², ux², (x*ux)², particle counter 
+            // shared sums of x**2, ux**2, (x*ux)**2, particle counter 
             PMACC_SMEM(acc,shSumMom2,float_X);
             PMACC_SMEM(acc,shSumPos2,float_X);
             PMACC_SMEM(acc,shSumMomPos2,float_X);
@@ -123,7 +123,7 @@ namespace picongpu
                     uint32_t const
                 )
                 {
-                    // set shared sums of x², ux², (x*ux)² to zero
+                    // set shared sums of x**2, ux**2, (x*ux)**2 to zero
                     shSumMom2 = float_X( 0.0 );
                     shSumPos2 = float_X( 0.0 );
                     shSumMomPos2 = float_X( 0.0 ); 
@@ -192,22 +192,20 @@ namespace picongpu
                         )
                         {
                             float_X const weighting = particle[ weighting_ ];
-                           // float_X const normedWeighting = weighting /
-                            //    float_X( particles::TYPICAL_NUM_PARTICLES_PER_MACROPARTICLE );
                             float3_X const mom = particle[ momentum_ ] / weighting;
                             float3_X const pos = particle[ position_ ];
                             lcellId_t const cellIdx = particle[ localCellIdx_ ];
                             const DataSpace<simDim> frameCellOffset(DataSpaceOperations<simDim>::template map<MappingDesc::SuperCellSize > (cellIdx));
                             auto globalCellOffset = globalOffset 
-													+ (superCellIdx - mapper.getGuardingSuperCells()) * MappingDesc::SuperCellSize::toRT()
-								                    + frameCellOffset;
-							const float_X posX = ( float_X( globalCellOffset.x() ) + pos.x() ) * cellSize.x();
+                                                    + (superCellIdx - mapper.getGuardingSuperCells()) * MappingDesc::SuperCellSize::toRT()
+                                                    + frameCellOffset;
+                            const float_X posX = ( float_X( globalCellOffset.x() ) + pos.x() ) * cellSize.x();
 
                             atomicAdd( &(shCount_e), weighting, ::alpaka::hierarchy::Threads{});
-                            //weighted sum of single Electron values (Momentum = particle_momentum/normedWeighting)
+                            //weighted sum of single electron values (momentum = particle_momentum/weighting)
                             atomicAdd( &(shSumMom2), mom.x() * mom.x() * weighting, ::alpaka::hierarchy::Threads{});
-							atomicAdd( &(shSumPos2), posX*posX*weighting, ::alpaka::hierarchy::Threads{});
-							atomicAdd( &(shSumMomPos2), mom.x()*posX* weighting, ::alpaka::hierarchy::Threads{});
+                            atomicAdd( &(shSumPos2), posX*posX*weighting, ::alpaka::hierarchy::Threads{});
+                            atomicAdd( &(shSumMomPos2), mom.x()*posX* weighting, ::alpaka::hierarchy::Threads{});
                         }
                     }
                 );
@@ -241,7 +239,7 @@ namespace picongpu
                     uint32_t const
                 )
                 {
-                    // add sums of x², ux², (x*ux)², number of electrons
+                    // add sums of x**2, ux**2, (x*ux)**2, number of electrons
                     atomicAdd(&( gSum[ 0 ] ),static_cast< float_64 >( shSumMom2 ),::alpaka::hierarchy::Blocks{});
                     atomicAdd(&( gSum[ 1 ] ),static_cast< float_64 >( shSumPos2 ),::alpaka::hierarchy::Blocks{});
                     atomicAdd(&( gSum[ 2 ] ),static_cast< float_64 >( shSumMomPos2 ),::alpaka::hierarchy::Blocks{});
@@ -437,7 +435,7 @@ namespace picongpu
                 }
 
                 // create header of the file
-                outFile << "#step sum of x² sum of ux² sum of (x*ux)² number of electrons" << " \n";
+                outFile << "#step emittance" << " \n";
             }
 
             // set how often the plugin should be executed while PIConGPU is running
@@ -539,15 +537,13 @@ namespace picongpu
                 numWorkers
             );
             
-
-            
-                  // Some funny things that make it possible for the kernel to calculate
-			  // the absolute position of the particles
-			DataSpace<simDim> localSize(m_cellDescription->getGridLayout().getDataSpaceWithoutGuarding());
-			const uint32_t numSlides = MovingWindow::getInstance().getSlideCounter(currentStep);
-			const SubGrid<simDim>& subGrid = Environment<simDim>::get().SubGrid();
-			DataSpace<simDim> globalOffset(subGrid.getLocalDomain().offset);
-			globalOffset.y() += (localSize.y() * numSlides);
+            // Some funny things that make it possible for the kernel to
+            // calculate the absolute position of the particles
+            DataSpace<simDim> localSize(m_cellDescription->getGridLayout().getDataSpaceWithoutGuarding());
+            const uint32_t numSlides = MovingWindow::getInstance().getSlideCounter(currentStep);
+            const SubGrid<simDim>& subGrid = Environment<simDim>::get().SubGrid();
+            DataSpace<simDim> globalOffset(subGrid.getLocalDomain().offset);
+            globalOffset.y() += (localSize.y() * numSlides);
             
             auto binaryKernel = std::bind(
                 kernel,
@@ -584,7 +580,7 @@ namespace picongpu
                 mpi::reduceMethods::Reduce( )
             );
 
-            /* print timestep, sums of x², ux², (x*ux)², number of electrons, emittance to file: */
+            /* print timestep, sums of x**2, ux**2, (x*ux)**2, number of electrons, emittance to file: */
             if( writeToFile )
             {
                 using dbl = std::numeric_limits< float_64 >;
