@@ -1,5 +1,6 @@
 /* Copyright 2013-2018 Axel Huebl, Felix Schmitt, Heiko Burau,
- *                     Rene Widera, Richard Pausch, Benjamin Worpitz
+ *                     Rene Widera, Richard Pausch, Benjamin Worpitz, 
+ * 					   Sophie Kossagk
  *
  * This file is part of PIConGPU.
  *
@@ -72,8 +73,7 @@ namespace picongpu
          * @tparam T_Mapping mapper functor type
          *
          * @param pb particle memory
-         * @param gSum storage for the reduced values
-         *                (two elements 0 == sum of x²; 1 == sum of ux²; 2 == sum of (x*ux)²; 3 == counts electrons)
+         * @param gSum...,gCount_e storage for the reduced values
          * @param mapper functor to map a block to a supercell
          */
         template<
@@ -129,15 +129,13 @@ namespace picongpu
                     uint32_t const
                 )
                 {
-                    // set shared sums of x², ux², (x*ux)² to zero
+                    // set shared sums of x², ux², (x*ux)², particle counter to zero
                     shSumMom2[linearIdx] = float_X(0.0);
 					shSumPos2[linearIdx] = float_X(0.0);
 					shSumMomPos2[linearIdx] = float_X(0.0);
 					shCount_e[linearIdx] = float_X(0.0);
                 }
             );
-
-
             __syncthreads( );
 
             DataSpace< simDim > const superCellIdx( mapper.getSuperCellIndex(
@@ -183,9 +181,6 @@ namespace picongpu
                 // loop over all particles in the frame
                 ForEachIdx< ParticleDomCfg > forEachParticle( workerIdx );
 
-			//	int num_intervals = 10; 
-			//	std::vector<float> counts(10);
-
                 forEachParticle(
                     [&](
                         uint32_t const linearIdx,
@@ -197,15 +192,12 @@ namespace picongpu
                         if(accFilter(acc,particle)){
 							
                             float_X const weighting = particle[ weighting_ ];
-                           // float_X const normedWeighting = weighting /
-                            //    float_X( particles::TYPICAL_NUM_PARTICLES_PER_MACROPARTICLE );
                             float3_X const mom = particle[ momentum_ ] / weighting;
                             float3_X const pos = particle[ position_ ];
 							
 							lcellId_t const cellIdx = particle[ localCellIdx_ ];
 							const DataSpace<simDim> frameCellOffset(DataSpaceOperations<simDim>::template map<MappingDesc::SuperCellSize > (cellIdx));
-							const int index_y=frameCellOffset.y();
-							
+							const int index_y=frameCellOffset.y();	
 							auto globalCellOffset = globalOffset 
 													+ (superCellIdx - mapper.getGuardingSuperCells()) * MappingDesc::SuperCellSize::toRT()
 													+ frameCellOffset;	
@@ -213,7 +205,7 @@ namespace picongpu
 							
 							if(	index_y >= 0 && index_y < SuperCellSize::y::value ){
 								atomicAdd( &(shCount_e[index_y]), weighting, ::alpaka::hierarchy::Threads{});
-								//weighted sum of single Electron values (Momentum = particle_momentum/normedWeighting)
+								//weighted sum of single Electron values (Momentum = particle_momentum/weighting)
 								atomicAdd( &(shSumMom2[index_y]), mom.x() * mom.x() * weighting, ::alpaka::hierarchy::Threads{});
 								atomicAdd( &(shSumPos2[index_y]), posX*posX*weighting, ::alpaka::hierarchy::Threads{});
 								atomicAdd( &(shSumMomPos2[index_y]), mom.x()*posX* weighting, ::alpaka::hierarchy::Threads{});
@@ -306,7 +298,7 @@ namespace picongpu
             //! periodicity of computing the particle energy
             plugins::multi::Option< std::string > notifyPeriod = {
                 "period",
-                "compute emittance[for each n-th step] enable plugin by setting a non-zero value"
+                "compute slice emittance[for each n-th step] enable plugin by setting a non-zero value"
             };
             plugins::multi::Option< std::string > filter = {
                 "filter",
@@ -397,7 +389,7 @@ namespace picongpu
 
             std::string const name = "CalcEmittance";
             //! short description of the plugin
-            std::string const description = "calculate the emittance of a species";
+            std::string const description = "calculate the slice emittance of a species";
             //! prefix used for command line arguments
             std::string const prefix = ParticlesType::FrameType::getName( ) + std::string( "_emittance" );
         };
@@ -422,7 +414,7 @@ namespace picongpu
             // decide which MPI-rank writes output
             writeToFile = reduce.hasResult( mpi::reduceMethods::Reduce( ) );
 			const SubGrid<simDim>& subGrid = Environment<simDim>::get().SubGrid();
-            // create 4 ints on gpu and host
+
             gSumMom2 = new GridBuffer<
                 float_64,
                 DIM1
@@ -461,7 +453,7 @@ namespace picongpu
                 }
 
                 // create header of the file
-                outFile << "#step sum of x² sum of ux² sum of (x*ux)² number of electrons" << " \n";
+                outFile << "#step sliceEmittance" << " \n";
             }
 
             // set how often the plugin should be executed while PIConGPU is running
@@ -569,16 +561,14 @@ namespace picongpu
                 numWorkers
             );
             
-              // Some funny things that make it possible for the kernel to calculate
-			  // the absolute position of the particles
+              // Some funny things that make it possible for the kernel 
+			  // to calculate the absolute position of the particles
 			DataSpace<simDim> localSize(m_cellDescription->getGridLayout().getDataSpaceWithoutGuarding());
-			//const uint32_t numSlides = MovingWindow::getInstance().getSlideCounter(currentStep);
 			const SubGrid<simDim>& subGrid = Environment<simDim>::get().SubGrid();
 			const int subGridY = subGrid.getGlobalDomain().size.y();
 			auto movingWindow=MovingWindow::getInstance().getWindow(currentStep);
 			DataSpace<simDim> globalOffset(subGrid.getLocalDomain().offset);
 			globalOffset.y() -= movingWindow.globalDimensions.offset.y();
-			//globalOffset.y() += (localSize.y() * numSlides);
 			
 			std::cout << "debug emitt: \t" <<  currentStep << "\t" 
 					  << movingWindow.globalDimensions.offset.y() << "\t"
