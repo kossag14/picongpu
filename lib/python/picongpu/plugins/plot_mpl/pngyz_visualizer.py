@@ -6,7 +6,7 @@ Authors: Sebastian Starke
 License: GPLv3+
 """
 
-from picongpu.plugins.png import PNG
+from picongpu.plugins.pngyz import PNG
 from picongpu.plugins.plot_mpl.base_visualizer import Visualizer as\
     BaseVisualizer, plt
 
