@@ -44,6 +44,7 @@ struct KinEnergy
     template< typename MomType, typename MassType >
     HDINLINE ValueType operator()( MomType const & mom, MassType const & mass )
     {
+        float_X const SPEED_OF_LIGHT = 299792458;
         if( mass == MassType( 0.0 ) )
             return SPEED_OF_LIGHT * math::abs( precisionCast< ValueType >( mom ) );
 
