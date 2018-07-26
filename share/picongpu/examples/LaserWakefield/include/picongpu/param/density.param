@@ -1,4 +1,4 @@
-/* Copyright 2013-2018 Axel Huebl, Rene Widera, Felix Schmitt,
+/* Copyright 2013-2017 Axel Huebl, Rene Widera, Felix Schmitt,
  *                     Richard Pausch, Marco Garten
  *
  * This file is part of PIConGPU.
@@ -51,7 +51,7 @@ namespace densityProfiles
          *
          *   takes `gasCenterLeft_SI      for y < gasCenterLeft_SI`,
          *         `gasCenterRight_SI     for y > gasCenterRight_SI`,
-         *   and exponent = 0.0  for gasCenterLeft_SI < y < gasCenterRight_SI
+         *   and exponent = float_X(0.0)  for gasCenterLeft_SI < y < gasCenterRight_SI
          */
         (PMACC_C_VALUE(float_X, gasFactor, -1.0))
         (PMACC_C_VALUE(float_X, gasPower, 4.0))
@@ -80,5 +80,184 @@ namespace densityProfiles
 
     /* definition of density with Gaussian profile */
     using Gaussian = GaussianImpl< GaussianParameter >;
+
+    PMACC_STRUCT(GaussianCloudParam,
+        /** Profile Formula:
+         *     exponent = |globalCellPos - center| / sigma
+         *     density = e^[ gasFactor * exponent^gasPower ]
+         */
+        (PMACC_C_VALUE(float_X, gasFactor, -0.5))
+        (PMACC_C_VALUE(float_X, gasPower, 2.0))
+
+        /** height of vacuum area on top border
+         *
+         * this vacuum is important because of the laser initialization,
+         * which is done in the first cell of the simulation
+         * unit: cells
+         */
+        (PMACC_C_VALUE(uint32_t, vacuumCellsY, 50))
+
+        /** The central position of the density distribution
+         *  unit: meter
+         */
+        (PMACC_C_VECTOR_DIM(float_64, simDim, center_SI, 1.024e-5, 9.072e-5, 1.024e-5))
+
+        /** the distance from gasCenter_SI until the density decreases to its 1/e-th part
+          *  unit: meter */
+        (PMACC_C_VECTOR_DIM(float_64, simDim, sigma_SI, 6.0e-6, 6.0e-6, 6.0e-6))
+    ); /* struct GaussianCloudParam */
+
+    /* definition of cloud profile */
+    using GaussianCloud = GaussianCloudImpl< GaussianCloudParam >;
+
+
+    struct FreeFormulaFunctor
+    {
+        /** This formula uses SI quantities only
+         *
+         * The profile will be multiplied by BASE_DENSITY.
+         *
+         * @param position_SI total offset including all slides [in meter]
+         * @param cellSize_SI cell sizes [in meter]
+         *
+         * @return float_X density [normalized to 1.0]
+         */
+        HDINLINE float_X operator()(
+            const floatD_64& position_SI,
+            const float3_64& cellSize_SI
+        )
+        {
+            /* add particle in cell at center of Gaussian Cloud profile */
+            const float3_64 position_start_SI( 1.024e-5, 9.072e-5, 1.024e-5 );
+
+            /* from all cells ... */
+            const pmacc::math::UInt64< simDim > cell_id( position_SI / cellSize_SI.shrink< simDim >() );
+
+            /* ... we calculate the corresponding "center" cell to init the particle in ... */
+            const pmacc::math::UInt64< simDim > cell_start(
+                precisionCast< uint64_t >(
+                    math::floor(
+                        position_start_SI.shrink< simDim >() /
+                        cellSize_SI
+                    )
+                )
+            );
+
+            /* ... and only in that center cell the density is 1.0, outside zero */
+            bool isStartCell = true;
+            for( uint64_t d = 0; d < simDim; ++d )
+                if( cell_id[d] != cell_start[d] )
+                    isStartCell = false;
+
+            if( isStartCell )
+                return 1.0;
+
+            return 0.0;
+        }
+    };
+
+    /* definition of free formula profile */
+    using FreeFormula = FreeFormulaImpl< FreeFormulaFunctor >;
+
+
+struct FoilFunctor
+{
+
+    /**
+     * This formula uses SI quantities only
+     * The profile will be multiplied by BASE_DENSITY_SI.
+     *
+     * @param position_SI total offset including all slides [in meter]
+     * @param cellSize_SI cell sizes [in meter]
+     *
+     * @return float_X density [normalized to 1.0]
+     */
+    HDINLINE float_X operator()(
+        float2_64 pos,
+        const float3_64& cellSize_SI
+    )
+    {
+        /* center point of foil */
+        constexpr float_64 plateauPos = 4e-6;
+        /* thickness of foil */
+        constexpr float_64 plateauLength = 2e-6;
+        /* gaussian ramp length of density above the surface */
+        constexpr float_64 rampLength = 0.1e-6;
+
+        using namespace pmacc::algorithms::math;
+
+        if( abs( pos.y() - plateauPos) < plateauLength / 2.0 )
+        {
+            return 1.0_X;
+        }
+        const float_64 d = math::min(
+            abs( pos.y() - plateauPos + plateauLength / 2.0 ),
+            abs( pos.y() - plateauPos - plateauLength / 2.0 )
+        );
+        return float_X( exp( -d * d / ( 2.0_X * rampLength * rampLength ) ) );
+    }
+};
+
+//! definition of free formula profile
+using Foil = FreeFormulaImpl< FoilFunctor >;
+
+
+struct FlatFoilWithRampFunctor
+    {
+        /** This formula uses SI quantities only.
+         *  The profile will be multiplied by BASE_DENSITY_SI.
+         *
+         * @param position_SI total offset including all slides [meter]
+         * @param cellSize_SI cell sizes [meter]
+         *
+         * @return float_X density [normalized to 1.0]
+         */
+        HDINLINE float_X
+        operator()(
+            const floatD_64& position_SI,
+            const float3_64& cellSize_SI
+        )
+        {
+            // m -> mu
+            const float_64 y( position_SI.y() * 1.e6 );
+
+            // target begin & end (plateau)
+            constexpr float_64 y0( 0.5 );
+            constexpr float_64 y1( y0 + 1.0 );
+            // exponential pre-expanded density
+            constexpr float_64 L( 10.e-3 );
+            constexpr float_64 L_cutoff( 4. * L );
+
+            float_64 dens = 0.0;
+
+            // upramp
+            if( y < y0 && (y0 - y) < L_cutoff )
+                dens = math::exp( ( y - y0 ) / L );
+            // downramp
+            if( y > y1 && (y - y1) < L_cutoff )
+                dens = math::exp( ( y1 - y ) / L );
+            // plateau
+            if( y >= y0 && y <= y1 )
+                dens = 1.0;
+
+            // safety check: all parts of the function MUST be > 0
+            dens *= float_64( dens >= 0.0 );
+            return dens;
+        }
+    };
+
+    // definition of free formula profile
+    using FlatFoilWithRamp = FreeFormulaImpl< FlatFoilWithRampFunctor >;
+
+    // put probe particles every 4th cell in X, Y(, Z)
+    using ProbeEveryFourthCell = EveryNthCellImpl<
+        mCT::UInt32<
+            4,
+            4,
+            4
+        >
+    >;
+
+
 }
 }

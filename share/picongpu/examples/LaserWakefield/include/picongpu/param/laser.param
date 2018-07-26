@@ -57,6 +57,14 @@
 #   define PARAM_PULSE_LENGTH_SI 5.e-15
 #endif
 
+#ifndef PARAM_FOCUS_POS_SI
+#   define PARAM_FOCUS_POS_SI 4.62e-5
+#endif
+
+#ifndef PARAM_W0_SI
+#   define PARAM_W0_SI 5.0e-6
+#endif
+
 namespace picongpu
 {
 namespace fields
@@ -110,11 +118,11 @@ namespace gaussianBeam
          *                             [   1.17741    ]
          *
          *  unit: meter */
-        static constexpr float_64 W0_SI = 5.0e-6 / 1.17741;
+        static constexpr float_64 W0_SI = PARAM_W0_SI / 1.17741;
         /** the distance to the laser focus in y-direction
          *  unit: meter */
-        static constexpr float_64 FOCUS_POS_SI = 4.62e-5;
-
+        static constexpr float_64 FOCUS_POS_SI = PARAM_FOCUS_POS_SI;
+        
         /** The laser pulse will be initialized PULSE_INIT times of the PULSE_LENGTH
          *
          *  unit: none */
