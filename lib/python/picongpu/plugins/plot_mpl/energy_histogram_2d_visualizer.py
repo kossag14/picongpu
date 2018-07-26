@@ -26,6 +26,7 @@ class Visualizer(BaseVisualizer):
             (the path before ``simOutput/``)
         """
         super(Visualizer, self).__init__(run_directory)
+        self.cbar = None
 
     def _create_data_reader(self, run_directory):
         """
@@ -43,7 +44,7 @@ class Visualizer(BaseVisualizer):
             np_data = np.zeros((len(bins), len(iteration)))
             for index, ts in enumerate(iteration):
                 np_data[:, index] = counts[ts]
-            plt.imshow(np_data,aspect="auto", norm=LogNorm(), origin="lower")
+            self.plt_obj = ax.imshow(np_data,aspect="auto", norm=LogNorm(), origin="lower")
         else:
             self.plt_obj = ax.semilogy(bins, counts, nonposy='clip')[0]
 
@@ -52,7 +53,13 @@ class Visualizer(BaseVisualizer):
         Implementation of base class function.
         """
         counts, bins, iteration = self.data
-        self.plt_obj.set_data(bins, counts)
+        if len(iteration) > 1:
+            np_data = np.zeros((len(bins), len(iteration)))
+            for index, ts in enumerate(iteration):
+                np_data[:, index] = counts[ts]
+            self.plt_obj = ax.imshow(np_data,aspect="auto", norm=LogNorm(), origin="lower")
+        else:
+            self.plt_obj = ax.semilogy(bins, counts, nonposy='clip')[0]
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -78,19 +85,27 @@ class Visualizer(BaseVisualizer):
         """
         ax = self._ax_or_gca(ax)
         # this already throws error if no species or iteration in kwargs
+        kwargs['iteration']=None
         super(Visualizer, self).visualize(ax, **kwargs)
+        iteration = None
         species = kwargs.get('species')
         species_filter = kwargs.get('species_filter')
         #if iteration is None or species is None:
          #   raise ValueError("Iteration and species have to be provided as\
           #  keyword arguments!")
-
-        ax.set_xlabel('Energy [keV]')
-        ax.set_ylabel('Count')
+        if not self.plt_obj.colorbar:
+            self.cbar = plt.colorbar(self.plt_obj, ax=ax)
+            self.cbar.set_label(r'Count')
+        ax.set_xlabel('iteration')
+        ax.set_ylabel('Energy [keV]')
         #ax.set_xlim([0,800e3])
         ax.set_title('Energy Histogram for species ' +
                      species + ', filter = ' + species_filter)
 
+    def clear_cbar(self):
+        """Clear colorbar if present."""
+        if self.cbar is not None:
+            self.cbar.remove()
 
 if __name__ == '__main__':
 
