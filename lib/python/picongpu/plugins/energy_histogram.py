@@ -32,7 +32,7 @@ class EnergyHistogram(object):
         self.data_file_prefix = "_energyHistogram_"
         self.data_file_suffix = ".dat"
 
-    def get_data_path(self, species, species_filter="aboveThresholdEnergy"):
+    def get_data_path(self, species, species_filter="all"):
         """
         Return the path to the underlying data file.
 
@@ -74,7 +74,7 @@ class EnergyHistogram(object):
 
         return data_file_path
 
-    def get_iterations(self, species, species_filter="aboveThresholdEnergy"):
+    def get_iterations(self, species, species_filter="all"):
         """
         Return an array of iterations with available data.
 
@@ -100,7 +100,7 @@ class EnergyHistogram(object):
                            delimiter=" ",
                            dtype=np.uint64).as_matrix()[:, 0]
 
-    def get(self, species, species_filter="aboveThresholdEnergy", iteration=None,
+    def get(self, species, species_filter="all", iteration=None,
             include_overflow=False, **kwargs):
         """
         Get a histogram.
@@ -132,7 +132,6 @@ class EnergyHistogram(object):
         if iteration is not None:
             if not isinstance(iteration, collections.Iterable):
                 iteration = np.array([iteration])
-
         data_file_path = self.get_data_path(species, species_filter)
 
         # read whole file as pandas.DataFrame
@@ -183,6 +182,6 @@ class EnergyHistogram(object):
             return collections.OrderedDict(zip(
                     iteration,
                     data.loc[iteration].as_matrix()
-                )), bins, iteration
+                )), bins
         else:
-            return data.loc[iteration].as_matrix()[0, :], bins, iteration
+            return data.loc[iteration].as_matrix()[0, :], bins
