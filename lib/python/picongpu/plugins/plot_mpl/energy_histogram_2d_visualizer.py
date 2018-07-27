@@ -6,7 +6,7 @@ Authors: Sebastian Starke
 License: GPLv3+
 """
 
-from picongpu.plugins.energy_histogram import EnergyHistogram
+from picongpu.plugins.energy_histogram_2d import EnergyHistogram
 from picongpu.plugins.plot_mpl.base_visualizer import Visualizer as\
     BaseVisualizer, plt
 import numpy as np
@@ -89,15 +89,15 @@ class Visualizer(BaseVisualizer):
         super(Visualizer, self).visualize(ax, **kwargs)
         iteration = None
         species = kwargs.get('species')
-        species_filter = kwargs.get('species_filter')
+        species_filter = kwargs.get('species_filter', 'all')
         #if iteration is None or species is None:
          #   raise ValueError("Iteration and species have to be provided as\
           #  keyword arguments!")
         if not self.plt_obj.colorbar:
             self.cbar = plt.colorbar(self.plt_obj, ax=ax)
             self.cbar.set_label(r'Count')
-        ax.set_xlabel('iteration')
-        ax.set_ylabel('Energy [keV]')
+        ax.set_xlabel('iteration/100')
+        ax.set_ylabel('Energy [MeV]')
         #ax.set_xlim([0,800e3])
         ax.set_title('Energy Histogram for species ' +
                      species + ', filter = ' + species_filter)
