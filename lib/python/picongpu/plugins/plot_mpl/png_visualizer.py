@@ -40,7 +40,7 @@ class Visualizer(BaseVisualizer):
         """
         self.plt_obj = ax.imshow(self.data)
 
-    def _update_plt_obj(self):
+    def _update_plt_obj(self,ax):
         """
         Implementation of base class function.
         """

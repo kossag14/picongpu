@@ -81,6 +81,8 @@ namespace densityProfiles
     /* definition of density with Gaussian profile */
     using Gaussian = GaussianImpl< GaussianParameter >;
 
+
+
     PMACC_STRUCT(GaussianCloudParam,
         /** Profile Formula:
          *     exponent = |globalCellPos - center| / sigma
@@ -123,36 +125,75 @@ namespace densityProfiles
          * @return float_X density [normalized to 1.0]
          */
         HDINLINE float_X operator()(
-            const floatD_64& position_SI,
-            const float3_64& cellSize_SI
-        )
-        {
-            /* add particle in cell at center of Gaussian Cloud profile */
-            const float3_64 position_start_SI( 1.024e-5, 9.072e-5, 1.024e-5 );
+            const float_64 y = position_SI.y();
+            const float_64 z = position_SI.z();
+            )
+            /** height of vacuum area on bottom border                                                  
+             *      this vacuum is really important because of the laser initialization,                
+             *      which is done in the first cell of the simulation                                   
+             *  unit: meter */
+            constexpr float_64 VACUUM_Y_SI = 100.0 * picongpu::SI::CELL_HEIGHT_SI;
+            constexpr float_64 VACUUM_Z_SI = 148.0 * picongpu::SI::CELL_DEPTH_SI;
+            constexpr float_64 Z_GRADIENT_SI = 32.0 * picongpu::SI::CELL_DEPTH_SI;
 
-            /* from all cells ... */
-            const pmacc::math::UInt64< simDim > cell_id( position_SI / cellSize_SI.shrink< simDim >() );
+            //constexpr float_64 SIM_BOX_Z = 3744.0 * picongpu::SI::CELL_DEPTH_SI; // MATCH THIS WITH Z-COMPONENT OF "TBG_gridsize" IN CFG_FILE !!!                                                            
+            constexpr float_64 SIM_BOX_Z = 3072.0 * picongpu::SI::CELL_DEPTH_SI; // MATCH THIS WITH Z-COMPONENT OF "TBG_gridsize" IN CFG_FILE !!!                                                              
 
-            /* ... we calculate the corresponding "center" cell to init the particle in ... */
-            const pmacc::math::UInt64< simDim > cell_start(
-                precisionCast< uint64_t >(
-                    math::floor(
-                        position_start_SI.shrink< simDim >() /
-                        cellSize_SI
-                    )
-                )
-            );
+            constexpr float_64 PLASMA_Z_LENGTH_SI = SIM_BOX_Z - float_X( 2.0 ) * VACUUM_Z_SI;
 
-            /* ... and only in that center cell the density is 1.0, outside zero */
-            bool isStartCell = true;
-            for( uint64_t d = 0; d < simDim; ++d )
-                if( cell_id[d] != cell_start[d] )
-                    isStartCell = false;
+            #ifndef PARAM_INITIAL_UPRAMP
+            #   define PARAM_INITIAL_UPRAMP 20.0e-6
+            #endif
 
-            if( isStartCell )
-                return 1.0;
+            constexpr float_64 INITIAL_UPRAMP = PARAM_INITIAL_UPRAMP; // unit: meter                                 
+            constexpr float_64 HIGH_DENSITY_PLATEAU = 40.0e-6; // unit: meter                           
+            constexpr float_64 DOWNRAMP_1 = 10.0e-6; // unit: meter                                     
+            constexpr float_64 DOWNRAMP_2 = 30.0e-6; // unit: meter                                     
 
-            return 0.0;
+            constexpr float_64 REL_DENSITY_1 = 2.0; // Old value of previous TWEAC scenarios was: 2.0   
+            constexpr float_64 REL_DENSITY_2 = 1.41421356; // sqrt(2.), old value was: sqrt(2.0)        
+
+            float_X temp = float_X(1.0);
+
+            /* Plot of density profile                                                                  
+                                                                                                        
+               density                                                                                  
+             2.0_|     ___                                                                              
+             1.4_|    /   \                                                                             
+                 |   /     `.                                                                           
+             1.0_|  /        `._______                                                                  
+                 | /                                                                                    
+                 |----------------------------  y                                                       
+                  A B   C D E    F                                                                      
+             */
+
+            // vacuum before gas (A)                                                                    
+            if ( y < VACUUM_Y_SI )
+                return float_X(0.0);
+            if ( z < VACUUM_Z_SI || z >= (PLASMA_Z_LENGTH_SI + VACUUM_Z_SI ) )
+                temp = float_X(0.0);
+            if ( z >= VACUUM_Z_SI && z < ( VACUUM_Z_SI + Z_GRADIENT_SI ) )
+                temp = float_X( (z - VACUUM_Z_SI ) / Z_GRADIENT_SI );
+            if ( z < ( PLASMA_Z_LENGTH_SI + VACUUM_Z_SI ) && z >= ( PLASMA_Z_LENGTH_SI + VACUUM_Z_SI - Z_GRADIENT_SI ) )
+                temp = float_X( ( PLASMA_Z_LENGTH_SI + VACUUM_Z_SI - z) / Z_GRADIENT_SI );
+
+            // first up-ramp (B)                                                                        
+            if ( y >= ( VACUUM_Y_SI ) && y < ( VACUUM_Y_SI + INITIAL_UPRAMP ) )
+              return temp * float_X(REL_DENSITY_1) * float_X( ( y - VACUUM_Y_SI ) / INITIAL_UPRAMP );
+            // first plateau (C)                                                                        
+            if ( y >= ( VACUUM_Y_SI + INITIAL_UPRAMP ) && y < ( VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DEN\SITY_PLATEAU) )
+              return temp * float_X(REL_DENSITY_1) ;
+            // first down-ramp (D)                                                                      
+            if ( y >= ( VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU ) && y < ( VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU + DOWNRAMP_1 ) )
+                return temp*float_X( ( 1.0 - ( y - VACUUM_Y_SI - INITIAL_UPRAMP - HIGH_DENSITY_PLATEAU ) / DOWNRAMP_1 ) * ( REL_DENSITY_1 - REL_DENSITY_2 ) + REL_DENSITY_2 );
+            // second down-ramp (E)                                                                     
+            if ( y >= (VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU + DOWNRAMP_1 ) && y < (VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU + DOWNRAMP_1 + DOWNRAMP_2 ) )
+                return temp*float_X( ( 1.0 - ( y - VACUUM_Y_SI - INITIAL_UPRAMP - HIGH_DENSITY_PLATEAU - DOWNRAMP_1 ) / DOWNRAMP_2 ) * ( REL_DENSITY_2 - 1.0 )  + 1.0 );
+            // second plateau (F)                                                                       
+            if ( y >= ( VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU + DOWNRAMP_1 + DOWNRAMP_2 ) )
+                return temp * float_X( 1.0 ); // 0.32+e19 cm^-3                                         
+
+            return float_X(temp);
         }
     };
 

@@ -58,7 +58,7 @@ class Visualizer(object):
         """
         raise NotImplementedError
 
-    def _update_plt_obj(self):
+    def _update_plt_obj(self,ax):
         """
         Take the 'self.data' member, interpret it and feed it into the
         'self.plt_obj'.
@@ -93,4 +93,4 @@ class Visualizer(object):
         if self.plt_obj is None:
             self._create_plt_obj(ax)
         else:
-            self._update_plt_obj()
+            self._update_plt_obj(ax)

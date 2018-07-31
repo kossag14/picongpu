@@ -55,7 +55,7 @@ class Visualizer(BaseVisualizer):
             norm=LogNorm()
         )
 
-    def _update_plt_obj(self):
+    def _update_plt_obj(self,ax):
         """
         Implementation of base class function.
         """

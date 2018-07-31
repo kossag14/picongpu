@@ -6,11 +6,12 @@ Authors: Sebastian Starke
 License: GPLv3+
 """
 
-from picongpu.plugins.energy_histogram import EnergyHistogram
+from picongpu.plugins.emittance import Emittance
 from picongpu.plugins.plot_mpl.base_visualizer import Visualizer as\
     BaseVisualizer, plt
 import numpy as np
 from matplotlib.colors import LogNorm
+
 
 class Visualizer(BaseVisualizer):
     """
@@ -26,30 +27,46 @@ class Visualizer(BaseVisualizer):
             (the path before ``simOutput/``)
         """
         super(Visualizer, self).__init__(run_directory)
+        self.cbar = None
 
     def _create_data_reader(self, run_directory):
         """
         Implementation of base class function.
         """
-        return EnergyHistogram(run_directory)
+        return Emittance(run_directory)
 
     def _create_plt_obj(self, ax):
         """
         Implementation of base class function.
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
-        counts, bins = self.data
-        self.plt_obj = ax.semilogy(bins, counts, nonposy='clip')[0]
+        counts, bins, iteration = self.data
+        if len(iteration) > 1:
+            np_data = np.zeros(len(iteration))
+            for index, ts in enumerate(iteration):
+                np_data[index] = counts[ts][0]
+            self.plt_obj = ax.plot(np_data*1.e6)
+            self.plt_lin = ax.axvline(self.itera/100)
+            #print('at Iteration=',self.itera, 'emittance= {0:.4f} pi mm mrad'.format(np_data[int(self.itera/100)]*1.e6))
+        else:
+            self.plt_obj = ax.semilogy(bins, counts, nonposy='clip')[0]
 
     def _update_plt_obj(self,ax):
         """
         Implementation of base class function.
         """
-        counts, bins = self.data
-        self.plt_obj.set_data(bins, counts)
-        #ax = self._ax_or_gca(None)
-        ax.relim()
-        ax.autoscale_view(True,True,True)
+        counts, bins, iteration = self.data
+        if len(iteration) > 1:
+            np_data = np.zeros(len(iteration))
+            for index, ts in enumerate(iteration):
+                np_data[index] = counts[ts][0]
+            self.plt_obj.clear()
+            self.plt_obj = ax.plot(np_data*1.e6, color='blue')
+            self.plt_lin.remove()
+            self.plt_lin=ax.axvline(self.itera/100)
+            #print('at Iteration=',self.itera, 'emittance= {0:.4f} pi mm mrad'.format(np_data[int(self.itera/100)]*1.e6))
+        else:
+            self.plt_obj = ax.semilogy(bins, counts, nonposy='clip')[0]
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -74,22 +91,26 @@ class Visualizer(BaseVisualizer):
 
         """
         ax = self._ax_or_gca(ax)
+        self.itera = kwargs.get('iteration')
         # this already throws error if no species or iteration in kwargs
+        kwargs['iteration']=None
         super(Visualizer, self).visualize(ax, **kwargs)
         species = kwargs.get('species')
         species_filter = kwargs.get('species_filter', 'all')
-        iteration = kwargs.get('iteration')
-        if iteration is None or species is None:
-            raise ValueError("Iteration and species have to be provided as\
-            keyword arguments!")
-
-        ax.set_xlabel('Energy [keV]')
-        ax.set_ylabel('Counts')
-        #ax.set_xlim([0,200])
-        #ax.set_ylim((-3e6,4.0e7))
-        ax.set_title('Energy Histogram for species ' +
+        #if iteration is None or species is None:
+         #   raise ValueError("Iteration and species have to be provided as\
+          #  keyword arguments!")
+        #ax.get_window_extent
+        ax.set_xlabel('iteration/100')
+        ax.set_ylabel('emittance [pi mm mrad]')
+        #ax.set_ylim([0,8])
+        ax.set_title('emittance for species ' +
                      species + ', filter = ' + species_filter)
 
+    def clear_cbar(self):
+        """Clear colorbar if present."""
+        if self.cbar is not None:
+            self.cbar.remove()
 
 if __name__ == '__main__':
 

@@ -56,14 +56,14 @@ namespace filter
             float_X const mass = attribute::getMass(weighting,particle);
             float_X const EnergyKin = KinEnergy<>( )(mom,mass);
                             
-			// MeV -> J [SI] -> normiert
-			
-			float_X const thresholdEne_MeV = PARAM_THRESHOLD_ENERGY_MEV;
-			float_X const thresholdEne_J = thresholdEne_MeV * 1.e3 * UNITCONV_keV_to_Joule; 
-			float_X const thresholdEne = thresholdEne_J / UNIT_ENERGY;
+            // MeV -> J [SI] -> normiert
+            
+            float_X const thresholdEne_MeV = PARAM_THRESHOLD_ENERGY_MEV;
+            float_X const thresholdEne_J = thresholdEne_MeV * 1.e3 * UNITCONV_keV_to_Joule; 
+            float_X const thresholdEne = thresholdEne_J / UNIT_ENERGY;
 
-			
-			if( EnergyKin > thresholdEne)
+            
+            if( EnergyKin > thresholdEne)
             {
                     result = true;
             }

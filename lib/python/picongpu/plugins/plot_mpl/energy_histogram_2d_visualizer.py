@@ -45,10 +45,11 @@ class Visualizer(BaseVisualizer):
             for index, ts in enumerate(iteration):
                 np_data[:, index] = counts[ts]
             self.plt_obj = ax.imshow(np_data,aspect="auto", norm=LogNorm(), origin="lower")
+            self.plt_lin = ax.axvline(self.itera/100)
         else:
             self.plt_obj = ax.semilogy(bins, counts, nonposy='clip')[0]
 
-    def _update_plt_obj(self):
+    def _update_plt_obj(self,ax):
         """
         Implementation of base class function.
         """
@@ -57,9 +58,11 @@ class Visualizer(BaseVisualizer):
             np_data = np.zeros((len(bins), len(iteration)))
             for index, ts in enumerate(iteration):
                 np_data[:, index] = counts[ts]
-            self.plt_obj = ax.imshow(np_data,aspect="auto", norm=LogNorm(), origin="lower")
+            self.plt_obj.set_data(np_data)
+            self.plt_lin.remove()
+            self.plt_lin=ax.axvline(self.itera/100)
         else:
-            self.plt_obj = ax.semilogy(bins, counts, nonposy='clip')[0]
+            self.plt_obj.set_data(bins, counts)
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -84,6 +87,7 @@ class Visualizer(BaseVisualizer):
 
         """
         ax = self._ax_or_gca(ax)
+        self.itera = kwargs.get('iteration')
         # this already throws error if no species or iteration in kwargs
         kwargs['iteration']=None
         super(Visualizer, self).visualize(ax, **kwargs)
