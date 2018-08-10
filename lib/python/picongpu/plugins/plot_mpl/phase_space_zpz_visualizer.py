@@ -6,16 +6,17 @@ Authors: Sebastian Starke
 License: GPLv3+
 """
 
-from picongpu.plugins.emittance import Emittance
+from matplotlib.colors import LogNorm
+import numpy as np
+
+from picongpu.plugins.phase_space_zpz import PhaseSpace
 from picongpu.plugins.plot_mpl.base_visualizer import Visualizer as\
     BaseVisualizer, plt
-import numpy as np
-from matplotlib.colors import LogNorm
 
 
 class Visualizer(BaseVisualizer):
     """
-    Class for creation of histogram plots on a logscaled y-axis.
+    Class for creating a matplotlib plot of phase space diagrams.
     """
 
     def __init__(self, run_directory):
@@ -27,92 +28,86 @@ class Visualizer(BaseVisualizer):
             (the path before ``simOutput/``)
         """
         super(Visualizer, self).__init__(run_directory)
+
+        # for unit-conversion from SI (taken from picongpu readthedocs)
+        self.mu = 1.e6
+        self.e_mc_r = 1. / (9.1e-31 * 2.9979e8)
         self.cbar = None
 
     def _create_data_reader(self, run_directory):
         """
         Implementation of base class function.
         """
-        return Emittance(run_directory)
+        return PhaseSpace(run_directory)
 
     def _create_plt_obj(self, ax):
         """
         Implementation of base class function.
-        Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
+        Turns 'self.plt_obj' into a matplotlib.image.AxesImage object.
         """
-        counts, bins, iteration = self.data
-        if len(iteration) > 1:
-            np_data = np.zeros((len(bins), len(iteration)))
-            for index, ts in enumerate(iteration):
-                np_data[:, index] = counts[ts][1:]
-            self.plt_obj = ax.imshow(np_data.T*1.e6,aspect="auto", norm=LogNorm(), origin="lower", vmin=1e-1, vmax=1e2,extent=(0,max(bins),0,max(iteration* 1.39e-16 * 1.e12)))
-            self.plt_lin = ax.axhline(self.itera* 1.39e-16 * 1.e12)
-        else:
-            self.plt_obj = ax.semilogy(bins, counts, nonposy='clip')[0]
+        dat, meta = self.data
+        self.plt_obj = ax.imshow(
+            np.abs(dat).T * meta.dV,
+            extent=meta.extent * [self.mu, self.mu, self.e_mc_r, self.e_mc_r],
+            interpolation='nearest',
+            aspect='auto',
+            origin='lower',
+            norm=LogNorm()
+        )
         self.cbar = plt.colorbar(self.plt_obj, ax=ax)
-        self.cbar.set_label(r'emittance [pi mm mrad]')
-        ax.set_xlabel('y-slice [µm]')
-        ax.set_ylabel('time [ps]')
+        self.cbar.set_label(
+                r'$Q / \mathrm{d}r \mathrm{d}p$ [$\mathrm{C s kg^{-1} m^{-2}}$')
+        ax.set_xlabel(r'${0}$ [${1}$]'.format(meta.r, "\mathrm{\mu m}"))
+        ax.set_ylabel(
+            r'$p_{0}$ [$\beta\gamma$]'.format(meta.p))
 
     def _update_plt_obj(self):
         """
         Implementation of base class function.
         """
-        counts, bins, iteration = self.data
-        if len(iteration) > 1:
-            np_data = np.zeros((len(bins), len(iteration)))
-            for index, ts in enumerate(iteration):
-                np_data[:, index] = counts[ts][1:]
-            self.plt_obj.set_data(np_data.T*1.e6)
-            self.plt_lin.remove()
-            self.plt_lin=self.ax.axhline(self.itera* 1.39e-16 * 1.e12)
-        else:
-            self.plt_obj = self.ax.semilogy(bins, counts, nonposy='clip')[0]
+        dat, meta = self.data
+        self.plt_obj.set_data(np.abs(dat).T * meta.dV)
         self.plt_obj.autoscale()
+        self.cbar.update_normal(self.plt_obj)
         self.ax.relim()
         self.ax.autoscale_view(True,True,True)
-        self.cbar.update_normal(self.plt_obj)
 
     def visualize(self, ax=None, **kwargs):
         """
-        Creates a semilogy plot on the provided axes object for
+        Creates a phase space plot on the provided axes object for
         the data of the given iteration using matpotlib.
 
         Parameters
         ----------
-        iteration: int
-            the iteration number for which data will be plotted.
         ax: matplotlib axes object
             the part of the figure where this plot will be shown.
-        kwargs: dictionary with further keyword arguments, valid are:
-            species: string
+        kwargs: dict with possible additional keyword args. Valid are:
+            iteration: int
+                the iteration number for which data will be plotted.
+            species : string
                 short name of the particle species, e.g. 'e' for electrons
                 (defined in ``speciesDefinition.param``)
-            iteration: int
-                number of the iteration
             species_filter: string
                 name of the particle species filter, default is 'all'
                 (defined in ``particleFilters.param``)
-
+            ps : string
+                phase space selection in order: spatial, momentum component,
+                e.g. 'ypy' or 'ypx'
         """
         self.ax = self._ax_or_gca(ax)
-        self.itera = kwargs.get('iteration')
-        kwargs['iteration']=None
         super(Visualizer, self).visualize(ax, **kwargs)
-        species = kwargs.get('species')
-        species_filter = kwargs.get('species_filter', 'all')
-        #ax.set_xlim([0,800e3])
-        ax.set_title('slice emittance for species ' +
-                     species + ', filter = ' + species_filter)
+
 
     def clear_cbar(self):
         """Clear colorbar if present."""
         if self.cbar is not None:
             self.cbar.remove()
 
+
 if __name__ == '__main__':
 
     def main():
+
         import sys
         import getopt
 
@@ -121,16 +116,17 @@ if __name__ == '__main__':
             print(
                 "python", sys.argv[0],
                 "-p <path to run_directory> -i <iteration>"
-                " -s <particle species> -f <species_filter>")
+                " -s <particle species> -f <species_filter>"
+                " -m <phase space selection>")
 
         path = None
         iteration = None
         species = None
         filtr = None
-
+        momentum = None
         try:
-            opts, args = getopt.getopt(sys.argv[1:], "hp:i:s:f:", [
-                "help", "path", "iteration", "species", "filter"])
+            opts, args = getopt.getopt(sys.argv[1:], "hp:i:s:f:m:", [
+                "help", "path", "iteration", "species", "filter", "momentum"])
         except getopt.GetoptError as err:
             print(err)
             usage()
@@ -148,6 +144,8 @@ if __name__ == '__main__':
                 species = arg
             elif opt in ["-f", "--filter"]:
                 filtr = arg
+            elif opt in ["-m", "--momentum"]:
+                momentum = arg
 
         # check that we got all args that we need
         if path is None or iteration is None:
@@ -160,10 +158,13 @@ if __name__ == '__main__':
         if filtr is None:
             filtr = 'all'
             print("Species filter was not given, will use", filtr)
+        if momentum is None:
+            momentum = 'zpz'
+            print("Momentum term was not given, will use", momentum)
 
         fig, ax = plt.subplots(1, 1)
         Visualizer(path).visualize(ax, iteration=iteration, species=species,
-                                   species_filter=filtr)
+                                   species_filter=filtr, ps_z=momentum)
         plt.show()
 
     main()

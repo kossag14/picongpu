@@ -67,6 +67,7 @@ class Visualizer(BaseVisualizer):
             self.plt_lin=self.ax.axvline(self.itera* 1.39e-16 * 1.e12)
         else:
             self.plt_obj.set_data(bins, counts)
+        self.plt_obj.autoscale()
         self.ax.relim()
         self.ax.autoscale_view(True,True,True)
         self.cbar.update_normal(self.plt_obj)

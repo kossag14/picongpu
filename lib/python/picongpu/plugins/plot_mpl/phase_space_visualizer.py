@@ -61,6 +61,7 @@ class Visualizer(BaseVisualizer):
         ax.set_ylabel(r'$p_{0}$ [$\beta\gamma$]'.format(meta.p))
         #ax.xaxis.set_major_locator(plt.MaxNLocator(4))
         #ax.yaxis.set_major_locator(plt.MaxNLocator(4))
+        ax.set_ylim([-2,5])
 
     def _update_plt_obj(self):
         """
