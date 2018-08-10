@@ -146,12 +146,16 @@ namespace densityProfiles
              #ifndef PARAM_DOWNRAMP_ALL
              #   define PARAM_DOWNRAMP_ALL 5.0e-6 // unit: meter
              #endif
-
+             #ifndef PARAM_FACTOR_DENSITY_END
+             #   define PARAM_FACTOR_DENSITY_END 1.0 
+             #endif
+             
              constexpr float_64 DOWNRAMP_1 = 0.29289322*PARAM_DOWNRAMP_ALL; // unit: meter
              constexpr float_64 DOWNRAMP_2 = PARAM_DOWNRAMP_ALL/1.41421356; // unit: meter
  
              constexpr float_64 REL_DENSITY_1 = 2.0; // Old value of previous TWEAC scenarios was: 2.0
              constexpr float_64 REL_DENSITY_2 = 1.41421356; // sqrt(2.), old value was: sqrt(2.0)
+             constexpr float_64 REL_DENSITY_3 = PARAM_FACTOR_DENSITY_END; 
              float_X temp = float_X(1.0);
     
      /* Alexander Debus description of the density profile
@@ -188,10 +192,10 @@ namespace densityProfiles
                 return temp*float_X( ( 1.0 - ( y - VACUUM_Y_SI - INITIAL_UPRAMP - HIGH_DENSITY_PLATEAU ) / DOWNRAMP_1 ) * ( REL_DENSITY_1 - REL_DENSITY_2 ) + REL_DENSITY_2 );
          // second down-ramp (E)
             if ( y >= (VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU + DOWNRAMP_1 ) && y < (VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU + DOWNRAMP_1 + DOWNRAMP_2 ) )
-                return temp*float_X( ( 1.0 - ( y - VACUUM_Y_SI - INITIAL_UPRAMP - HIGH_DENSITY_PLATEAU - DOWNRAMP_1 ) / DOWNRAMP_2 ) * ( REL_DENSITY_2 - 1.0 )  + 1.0 );
+                return temp*float_X( ( 1.0 - ( y - VACUUM_Y_SI - INITIAL_UPRAMP - HIGH_DENSITY_PLATEAU - DOWNRAMP_1 ) / DOWNRAMP_2 ) * ( REL_DENSITY_2 - REL_DENSITY_3 )  + REL_DENSITY_3 );
          // second plateau (F)
             if ( y >= ( VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU + DOWNRAMP_1 + DOWNRAMP_2 ) )
-                return temp * float_X( 1.0 ); // 0.32+e19 cm^-3
+                return temp * float_X( REL_DENSITY_3 ); // 0.32+e19 cm^-3
              return float_X(temp);
          }
      };
