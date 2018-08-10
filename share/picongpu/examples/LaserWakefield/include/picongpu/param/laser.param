@@ -126,7 +126,7 @@ namespace gaussianBeam
         /** The laser pulse will be initialized PULSE_INIT times of the PULSE_LENGTH
          *
          *  unit: none */
-        static constexpr float_64 PULSE_INIT = 15.0;
+        static constexpr float_64 PULSE_INIT = 10.0;
 
         /** cell from top where the laser is initialized
          *

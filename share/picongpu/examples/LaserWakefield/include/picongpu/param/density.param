@@ -81,8 +81,6 @@ namespace densityProfiles
     /* definition of density with Gaussian profile */
     using Gaussian = GaussianImpl< GaussianParameter >;
 
-
-
     PMACC_STRUCT(GaussianCloudParam,
         /** Profile Formula:
          *     exponent = |globalCellPos - center| / sigma
@@ -113,92 +111,93 @@ namespace densityProfiles
     using GaussianCloud = GaussianCloudImpl< GaussianCloudParam >;
 
 
-    struct FreeFormulaFunctor
-    {
-        /** This formula uses SI quantities only
-         *
-         * The profile will be multiplied by BASE_DENSITY.
-         *
-         * @param position_SI total offset including all slides [in meter]
-         * @param cellSize_SI cell sizes [in meter]
-         *
-         * @return float_X density [normalized to 1.0]
+     struct FreeFormulaFunctor
+     {
+         /** This formula uses SI quantities only.
+          *  The profile will be multiplied by BASE_DENSITY_SI.
+          *
+          * @param position_SI total offset including all slides [meter]
+          * @param cellSize_SI cell sizes [meter]
+          *
+          * @return float_X density [normalized to 1.0]
+          */
+         HDINLINE float_X
+         operator()(
+             const floatD_64& position_SI,
+             const float3_64& cellSize_SI
+         )
+         {
+             const float_64 y = position_SI.y();
+             const float_64 z = position_SI.z();
+ 
+             /** height of vacuum area on bottom border
+              *      this vacuum is really important because of the laser initialization, 
+              *      which is done in the first cell of the simulation
+              *  unit: meter */
+             constexpr float_64 VACUUM_Y_SI = 100.0 * picongpu::SI::CELL_HEIGHT_SI;
+             constexpr float_64 VACUUM_Z_SI = 148.0 * picongpu::SI::CELL_DEPTH_SI;
+             constexpr float_64 Z_GRADIENT_SI = 32.0 * picongpu::SI::CELL_DEPTH_SI;
+            //constexpr float_64 SIM_BOX_Z = 3744.0 * picongpu::SI::CELL_DEPTH_SI; // MATCH THIS WITH Z-COMPONENT OF "TBG_gridsize" IN CFG_FILE !!!
+             constexpr float_64 SIM_BOX_Z = 3072.0 * picongpu::SI::CELL_DEPTH_SI; // MATCH THIS WITH Z-COMPONENT OF "TBG_gridsize" IN CFG_FILE !!!
+             constexpr float_64 PLASMA_Z_LENGTH_SI = SIM_BOX_Z - float_X( 2.0 ) * VACUUM_Z_SI;
+             constexpr float_64 INITIAL_UPRAMP = 20.0e-6; // unit: meter
+             constexpr float_64 HIGH_DENSITY_PLATEAU = 80.0e-6; // unit: meter
+
+             #ifndef PARAM_DOWNRAMP_ALL
+             #   define PARAM_DOWNRAMP_ALL 5.0e-6 // unit: meter
+             #endif
+
+             constexpr float_64 DOWNRAMP_1 = 0.29289322*PARAM_DOWNRAMP_ALL; // unit: meter
+             constexpr float_64 DOWNRAMP_2 = PARAM_DOWNRAMP_ALL/1.41421356; // unit: meter
+ 
+             constexpr float_64 REL_DENSITY_1 = 2.0; // Old value of previous TWEAC scenarios was: 2.0
+             constexpr float_64 REL_DENSITY_2 = 1.41421356; // sqrt(2.), old value was: sqrt(2.0)
+             float_X temp = float_X(1.0);
+    
+     /* Alexander Debus description of the density profile
+        The correct gas profile should be: 
+        B) (after initial vacuum) upramp until 20um to relative density of 2.0, 
+        C) high density plateau at 2.0 rel. density until 100um, 
+        D) first density downramp until 110um to rel. density sqrt(2.0), 
+        E) second density downramp until 140um to rel. density 1.0 (the base density), 
+        F) everything stays at the base density.
          */
-        HDINLINE float_X operator()(
-            const float_64 y = position_SI.y();
-            const float_64 z = position_SI.z();
-            )
-            /** height of vacuum area on bottom border                                                  
-             *      this vacuum is really important because of the laser initialization,                
-             *      which is done in the first cell of the simulation                                   
-             *  unit: meter */
-            constexpr float_64 VACUUM_Y_SI = 100.0 * picongpu::SI::CELL_HEIGHT_SI;
-            constexpr float_64 VACUUM_Z_SI = 148.0 * picongpu::SI::CELL_DEPTH_SI;
-            constexpr float_64 Z_GRADIENT_SI = 32.0 * picongpu::SI::CELL_DEPTH_SI;
+     /* Plot of density profile
 
-            //constexpr float_64 SIM_BOX_Z = 3744.0 * picongpu::SI::CELL_DEPTH_SI; // MATCH THIS WITH Z-COMPONENT OF "TBG_gridsize" IN CFG_FILE !!!                                                            
-            constexpr float_64 SIM_BOX_Z = 3072.0 * picongpu::SI::CELL_DEPTH_SI; // MATCH THIS WITH Z-COMPONENT OF "TBG_gridsize" IN CFG_FILE !!!                                                              
-
-            constexpr float_64 PLASMA_Z_LENGTH_SI = SIM_BOX_Z - float_X( 2.0 ) * VACUUM_Z_SI;
-
-            #ifndef PARAM_INITIAL_UPRAMP
-            #   define PARAM_INITIAL_UPRAMP 20.0e-6
-            #endif
-
-            constexpr float_64 INITIAL_UPRAMP = PARAM_INITIAL_UPRAMP; // unit: meter                                 
-            constexpr float_64 HIGH_DENSITY_PLATEAU = 40.0e-6; // unit: meter                           
-            constexpr float_64 DOWNRAMP_1 = 10.0e-6; // unit: meter                                     
-            constexpr float_64 DOWNRAMP_2 = 30.0e-6; // unit: meter                                     
-
-            constexpr float_64 REL_DENSITY_1 = 2.0; // Old value of previous TWEAC scenarios was: 2.0   
-            constexpr float_64 REL_DENSITY_2 = 1.41421356; // sqrt(2.), old value was: sqrt(2.0)        
-
-            float_X temp = float_X(1.0);
-
-            /* Plot of density profile                                                                  
-                                                                                                        
-               density                                                                                  
-             2.0_|     ___                                                                              
-             1.4_|    /   \                                                                             
-                 |   /     `.                                                                           
-             1.0_|  /        `._______                                                                  
-                 | /                                                                                    
-                 |----------------------------  y                                                       
-                  A B   C D E    F                                                                      
-             */
-
-            // vacuum before gas (A)                                                                    
+        density
+         2.0_|     ___ 
+         1.4_|    /   \
+             |   /     `. 
+         1.0_|  /        `._______
+             | /
+             |----------------------------  y
+             A B   C D E    F
+         */
+     // vacuum before gas (A)
             if ( y < VACUUM_Y_SI )
                 return float_X(0.0);
-            if ( z < VACUUM_Z_SI || z >= (PLASMA_Z_LENGTH_SI + VACUUM_Z_SI ) )
-                temp = float_X(0.0);
-            if ( z >= VACUUM_Z_SI && z < ( VACUUM_Z_SI + Z_GRADIENT_SI ) )
-                temp = float_X( (z - VACUUM_Z_SI ) / Z_GRADIENT_SI );
-            if ( z < ( PLASMA_Z_LENGTH_SI + VACUUM_Z_SI ) && z >= ( PLASMA_Z_LENGTH_SI + VACUUM_Z_SI - Z_GRADIENT_SI ) )
-                temp = float_X( ( PLASMA_Z_LENGTH_SI + VACUUM_Z_SI - z) / Z_GRADIENT_SI );
 
-            // first up-ramp (B)                                                                        
+         // first up-ramp (B)
             if ( y >= ( VACUUM_Y_SI ) && y < ( VACUUM_Y_SI + INITIAL_UPRAMP ) )
-              return temp * float_X(REL_DENSITY_1) * float_X( ( y - VACUUM_Y_SI ) / INITIAL_UPRAMP );
-            // first plateau (C)                                                                        
-            if ( y >= ( VACUUM_Y_SI + INITIAL_UPRAMP ) && y < ( VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DEN\SITY_PLATEAU) )
-              return temp * float_X(REL_DENSITY_1) ;
-            // first down-ramp (D)                                                                      
+                return temp * float_X(REL_DENSITY_1) * float_X( ( y - VACUUM_Y_SI ) / INITIAL_UPRAMP );
+         // first plateau (C)
+            if ( y >= ( VACUUM_Y_SI + INITIAL_UPRAMP ) && y < ( VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU) )
+                return temp * float_X(REL_DENSITY_1) ;
+         // first down-ramp (D)
             if ( y >= ( VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU ) && y < ( VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU + DOWNRAMP_1 ) )
                 return temp*float_X( ( 1.0 - ( y - VACUUM_Y_SI - INITIAL_UPRAMP - HIGH_DENSITY_PLATEAU ) / DOWNRAMP_1 ) * ( REL_DENSITY_1 - REL_DENSITY_2 ) + REL_DENSITY_2 );
-            // second down-ramp (E)                                                                     
+         // second down-ramp (E)
             if ( y >= (VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU + DOWNRAMP_1 ) && y < (VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU + DOWNRAMP_1 + DOWNRAMP_2 ) )
                 return temp*float_X( ( 1.0 - ( y - VACUUM_Y_SI - INITIAL_UPRAMP - HIGH_DENSITY_PLATEAU - DOWNRAMP_1 ) / DOWNRAMP_2 ) * ( REL_DENSITY_2 - 1.0 )  + 1.0 );
-            // second plateau (F)                                                                       
+         // second plateau (F)
             if ( y >= ( VACUUM_Y_SI + INITIAL_UPRAMP + HIGH_DENSITY_PLATEAU + DOWNRAMP_1 + DOWNRAMP_2 ) )
-                return temp * float_X( 1.0 ); // 0.32+e19 cm^-3                                         
-
-            return float_X(temp);
-        }
-    };
-
-    /* definition of free formula profile */
-    using FreeFormula = FreeFormulaImpl< FreeFormulaFunctor >;
+                return temp * float_X( 1.0 ); // 0.32+e19 cm^-3
+             return float_X(temp);
+         }
+     };
+ 
+     /* definition of density with Gaussian profile */
+using FreeFormula = FreeFormulaImpl< FreeFormulaFunctor >;
 
 
 struct FoilFunctor
