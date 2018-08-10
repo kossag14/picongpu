@@ -59,6 +59,8 @@ class Visualizer(BaseVisualizer):
                 r'$Q / \mathrm{d}r \mathrm{d}p$ [$\mathrm{C s kg^{-1} m^{-2}}$] ')
         ax.set_xlabel(r'${0}$ [${1}$]'.format(meta.r, "\mathrm{\mu m}"))
         ax.set_ylabel(r'$p_{0}$ [$\beta\gamma$]'.format(meta.p))
+        #ax.xaxis.set_major_locator(plt.MaxNLocator(4))
+        #ax.yaxis.set_major_locator(plt.MaxNLocator(4))
 
     def _update_plt_obj(self):
         """
