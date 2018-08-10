@@ -46,28 +46,28 @@ class Visualizer(BaseVisualizer):
             for index, ts in enumerate(iteration):
                 np_data[:, index] = counts[ts][1:]
             self.plt_obj = ax.imshow(np_data.T*1.e6,aspect="auto", norm=LogNorm(), origin="lower", vmin=1e-1, vmax=1e2)
-            self.plt_lin = ax.axhline(self.itera/100)
-            #self.plt_obj = ax.vlines(iteration, ymin=0,ymax=100)
+            self.plt_lin = ax.axhline(self.iteration/100)
         else:
             self.plt_obj = ax.semilogy(bins, counts[1:]*1.e6, nonposy='clip')[0]
-            #self.plt_obj = ax.vlines(iteration, ymin=0,ymax=100)
 
-    def _update_plt_obj(self,ax):
+    def _update_plt_obj(self):
         """
         Implementation of base class function.
         """
         counts, bins, iteration = self.data
+        ax = self._ax_or_gca(None)
         if len(iteration) > 1:
             np_data = np.zeros((len(bins), len(iteration)))
             for index, ts in enumerate(iteration):
                 np_data[:, index] = counts[ts][1:]
             self.plt_obj.set_data(np_data.T*1.e6)
             self.plt_lin.remove()
-            self.plt_lin=ax.axhline(self.itera/100)
+            self.plt_lin=self.ax.axhline(self.iteration/100)
         else:
             self.plt_obj.remove()
-            self.plt_obj = ax.semilogy(bins, counts[1:]*1.e6, nonposy='clip', color='blue')[0]
-            #self.plt_obj = ax.vlines(iteration, ymin=0,ymax=100)
+            self.plt_obj = self.ax.semilogy(bins, counts[1:]*1.e6, nonposy='clip', color='blue')[0]
+        self.ax.relim()
+        self.ax.autoscale_view(True,True,True)
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -91,19 +91,16 @@ class Visualizer(BaseVisualizer):
                 (defined in ``particleFilters.param``)
 
         """
-        ax = self._ax_or_gca(ax)
-        self.itera = kwargs.get('iteration')
-        #self.plt_obj=ax.hlines(iteration/100, xmin=0,xmax=150)
-        # this already throws error if no species or iteration in kwargs
+        self.ax = self._ax_or_gca(ax)
+        self.iteration= kwargs.get('iteration')
         super(Visualizer, self).visualize(ax, **kwargs)
         species = kwargs.get('species')
         species_filter = kwargs.get('species_filter', 'all')
-        iteration = kwargs.get('iteration')
-        if iteration is None or species is None:
+        if self.iteration is None or species is None:
             raise ValueError("Iteration and species have to be provided as\
             keyword arguments!")
-        ax.set_xlabel('y-slice')
-        ax.set_ylabel('iteration/100')
+        ax.set_xlabel('y-slice [µm]')
+        ax.set_ylabel('emittance [pi mm mrad]')
         ax.set_title('slice emittance for species ' +
                      species + ', filter = ' + species_filter)
 

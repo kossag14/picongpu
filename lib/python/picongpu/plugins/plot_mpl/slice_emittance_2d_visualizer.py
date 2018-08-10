@@ -45,14 +45,16 @@ class Visualizer(BaseVisualizer):
             np_data = np.zeros((len(bins), len(iteration)))
             for index, ts in enumerate(iteration):
                 np_data[:, index] = counts[ts][1:]
-            self.plt_obj = ax.imshow(np_data.T*1.e6,aspect="auto", norm=LogNorm(), origin="lower", vmin=1e-1, vmax=1e2)
-            self.plt_lin = ax.axhline(self.itera/100)
-            #self.plt_obj = ax.vlines(iteration, ymin=0,ymax=100)
+            self.plt_obj = ax.imshow(np_data.T*1.e6,aspect="auto", norm=LogNorm(), origin="lower", vmin=1e-1, vmax=1e2,extent=(0,max(bins),0,max(iteration* 1.39e-16 * 1.e12)))
+            self.plt_lin = ax.axhline(self.itera* 1.39e-16 * 1.e12)
         else:
             self.plt_obj = ax.semilogy(bins, counts, nonposy='clip')[0]
-            #self.plt_obj = ax.vlines(iteration, ymin=0,ymax=100)
+        self.cbar = plt.colorbar(self.plt_obj, ax=ax)
+        self.cbar.set_label(r'emittance [pi mm mrad]')
+        ax.set_xlabel('y-slice [µm]')
+        ax.set_ylabel('time [ps]')
 
-    def _update_plt_obj(self,ax):
+    def _update_plt_obj(self):
         """
         Implementation of base class function.
         """
@@ -61,19 +63,14 @@ class Visualizer(BaseVisualizer):
             np_data = np.zeros((len(bins), len(iteration)))
             for index, ts in enumerate(iteration):
                 np_data[:, index] = counts[ts][1:]
-            #self.plt_obj = ax.imshow(np_data.T*1.e6,aspect="auto", norm=LogNorm(), origin="lower", vmin=1e-1, vmax=1e2)
             self.plt_obj.set_data(np_data.T*1.e6)
             self.plt_lin.remove()
-            self.plt_lin=ax.axhline(self.itera/100)
-            
-            #
-            #ax.relim()
-            #äax.autoscale_view(True,True,True)
-            #self.plt_obj=ax.hlines(self.itera/100, xmin=0,xmax=150)
-            #self.plt_obj = ax.vlines(iteration, ymin=0,ymax=100)
+            self.plt_lin=self.ax.axhline(self.itera* 1.39e-16 * 1.e12)
         else:
-            self.plt_obj = ax.semilogy(bins, counts, nonposy='clip')[0]
-            #self.plt_obj = ax.vlines(iteration, ymin=0,ymax=100)
+            self.plt_obj = self.ax.semilogy(bins, counts, nonposy='clip')[0]
+        self.ax.relim()
+        self.ax.autoscale_view(True,True,True)
+        self.cbar.update_normal(self.plt_obj)
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -97,24 +94,12 @@ class Visualizer(BaseVisualizer):
                 (defined in ``particleFilters.param``)
 
         """
-        ax = self._ax_or_gca(ax)
+        self.ax = self._ax_or_gca(ax)
         self.itera = kwargs.get('iteration')
-        #self.plt_obj=ax.hlines(iteration/100, xmin=0,xmax=150)
-        # this already throws error if no species or iteration in kwargs
         kwargs['iteration']=None
         super(Visualizer, self).visualize(ax, **kwargs)
         species = kwargs.get('species')
         species_filter = kwargs.get('species_filter', 'all')
-        #if iteration is None or species is None:
-         #   raise ValueError("Iteration and species have to be provided as\
-          #  keyword arguments!")
-        if not self.plt_obj.colorbar:
-            self.cbar = plt.colorbar(self.plt_obj, ax=ax)
-            self.cbar.set_label(r'emittance [pi mm mrad]')
-        
-        
-        ax.set_xlabel('y-slice')
-        ax.set_ylabel('iteration/100')
         #ax.set_xlim([0,800e3])
         ax.set_title('slice emittance for species ' +
                      species + ', filter = ' + species_filter)

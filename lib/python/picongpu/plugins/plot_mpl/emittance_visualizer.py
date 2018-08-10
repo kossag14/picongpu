@@ -45,13 +45,12 @@ class Visualizer(BaseVisualizer):
             np_data = np.zeros(len(iteration))
             for index, ts in enumerate(iteration):
                 np_data[index] = counts[ts][0]
-            self.plt_obj = ax.plot(np_data*1.e6)
-            self.plt_lin = ax.axvline(self.itera/100)
-            #print('at Iteration=',self.itera, 'emittance= {0:.4f} pi mm mrad'.format(np_data[int(self.itera/100)]*1.e6))
+            self.plt_obj = ax.plot(iteration* 1.39e-16 * 1.e12,np_data*1.e6)
+            self.plt_lin = ax.axvline(self.itera* 1.39e-16 * 1.e12)
         else:
             self.plt_obj = ax.semilogy(bins, counts, nonposy='clip')[0]
 
-    def _update_plt_obj(self,ax):
+    def _update_plt_obj(self):
         """
         Implementation of base class function.
         """
@@ -61,12 +60,14 @@ class Visualizer(BaseVisualizer):
             for index, ts in enumerate(iteration):
                 np_data[index] = counts[ts][0]
             self.plt_obj.clear()
-            self.plt_obj = ax.plot(np_data*1.e6, color='blue')
-            self.plt_lin.remove()
-            self.plt_lin=ax.axvline(self.itera/100)
-            #print('at Iteration=',self.itera, 'emittance= {0:.4f} pi mm mrad'.format(np_data[int(self.itera/100)]*1.e6))
+            if self.plt_lin:
+                self.plt_lin.remove()
+            self.plt_obj = self.ax.plot(iteration* 1.39e-16 * 1.e12,np_data*1.e6, color='blue')
+            self.plt_lin=self.ax.axvline(self.itera* 1.39e-16 * 1.e12)
         else:
-            self.plt_obj = ax.semilogy(bins, counts, nonposy='clip')[0]
+            self.plt_obj = self.ax.semilogy(bins, counts, nonposy='clip')[0]
+        self.ax.relim()
+        self.ax.autoscale_view(True,True,True)
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -90,18 +91,14 @@ class Visualizer(BaseVisualizer):
                 (defined in ``particleFilters.param``)
 
         """
-        ax = self._ax_or_gca(ax)
+        self.ax = self._ax_or_gca(ax)
         self.itera = kwargs.get('iteration')
         # this already throws error if no species or iteration in kwargs
         kwargs['iteration']=None
         super(Visualizer, self).visualize(ax, **kwargs)
         species = kwargs.get('species')
         species_filter = kwargs.get('species_filter', 'all')
-        #if iteration is None or species is None:
-         #   raise ValueError("Iteration and species have to be provided as\
-          #  keyword arguments!")
-        #ax.get_window_extent
-        ax.set_xlabel('iteration/100')
+        ax.set_xlabel('time [ps]')
         ax.set_ylabel('emittance [pi mm mrad]')
         #ax.set_ylim([0,8])
         ax.set_title('emittance for species ' +

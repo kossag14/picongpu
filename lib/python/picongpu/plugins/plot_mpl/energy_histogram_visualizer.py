@@ -39,17 +39,21 @@ class Visualizer(BaseVisualizer):
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
         counts, bins = self.data
-        self.plt_obj = ax.semilogy(bins, counts, nonposy='clip')[0]
+        self.plt_obj = ax.semilogy(bins*1.e-3, counts, nonposy='clip')[0]
+        ax.set_xlabel('Energy [MeV]')
+        ax.set_ylabel('Counts')
+        #ax.set_xlim([0,200])
+        #ax.set_ylim((-3e6,4.0e7))
 
-    def _update_plt_obj(self,ax):
+
+    def _update_plt_obj(self):
         """
         Implementation of base class function.
         """
         counts, bins = self.data
-        self.plt_obj.set_data(bins, counts)
-        #ax = self._ax_or_gca(None)
-        ax.relim()
-        ax.autoscale_view(True,True,True)
+        self.plt_obj.set_data(bins*1.e-3, counts)
+        self.ax.relim()
+        self.ax.autoscale_view(True,True,True)
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -73,7 +77,7 @@ class Visualizer(BaseVisualizer):
                 (defined in ``particleFilters.param``)
 
         """
-        ax = self._ax_or_gca(ax)
+        self.ax = self._ax_or_gca(ax)
         # this already throws error if no species or iteration in kwargs
         super(Visualizer, self).visualize(ax, **kwargs)
         species = kwargs.get('species')
@@ -82,12 +86,7 @@ class Visualizer(BaseVisualizer):
         if iteration is None or species is None:
             raise ValueError("Iteration and species have to be provided as\
             keyword arguments!")
-
-        ax.set_xlabel('Energy [keV]')
-        ax.set_ylabel('Counts')
-        #ax.set_xlim([0,200])
-        #ax.set_ylim((-3e6,4.0e7))
-        ax.set_title('Energy Histogram for species ' +
+        self.ax.set_title('Energy Histogram for species ' +
                      species + ', filter = ' + species_filter)
 
 

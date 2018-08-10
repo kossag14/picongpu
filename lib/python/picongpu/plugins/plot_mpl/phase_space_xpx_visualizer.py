@@ -54,13 +54,23 @@ class Visualizer(BaseVisualizer):
             origin='lower',
             norm=LogNorm()
         )
+        self.cbar = plt.colorbar(self.plt_obj, ax=ax)
+        self.cbar.set_label(
+                r'$Q / \mathrm{d}r \mathrm{d}p$ [$\mathrm{C s kg^{-1} m^{-2}}$')
 
-    def _update_plt_obj(self,ax):
+        ax.set_xlabel(r'${0}$ [${1}$]'.format(meta.r, "\mathrm{\mu m}"))
+        ax.set_ylabel(
+            r'$p_{0}$ [$\beta\gamma$]'.format(meta.p))
+
+    def _update_plt_obj(self):
         """
         Implementation of base class function.
         """
         dat, meta = self.data
         self.plt_obj.set_data(np.abs(dat).T * meta.dV)
+        self.cbar.update_normal(self.plt_obj)
+        self.ax.relim()
+        self.ax.autoscale_view(True,True,True)
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -84,20 +94,9 @@ class Visualizer(BaseVisualizer):
                 phase space selection in order: spatial, momentum component,
                 e.g. 'ypy' or 'ypx'
         """
-        ax = self._ax_or_gca(ax)
+        self.ax = self._ax_or_gca(ax)
         super(Visualizer, self).visualize(ax, **kwargs)
 
-        _, meta = self.data
-        # prevent multiple rendering of colorbar
-        if not self.plt_obj.colorbar:
-            self.cbar = plt.colorbar(self.plt_obj, ax=ax)
-            self.cbar.set_label(
-                r'$Q / \mathrm{d}r \mathrm{d}p$ [$\mathrm{C s kg^{-1} m^{-2}}'
-                '$')
-
-        ax.set_xlabel(r'${0}$ [${1}$]'.format(meta.r, "\mathrm{\mu m}"))
-        ax.set_ylabel(
-            r'$p_{0}$ [$\beta\gamma$]'.format(meta.p))
 
     def clear_cbar(self):
         """Clear colorbar if present."""

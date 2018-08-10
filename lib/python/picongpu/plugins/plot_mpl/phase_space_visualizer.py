@@ -68,6 +68,8 @@ class Visualizer(BaseVisualizer):
         self.plt_obj.set_data(np.abs(dat).T * meta.dV)
         self.plt_obj.autoscale()
         self.cbar.update_normal(self.plt_obj)
+        self.ax.relim()
+        self.ax.autoscale_view(True,True,True)
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -91,7 +93,7 @@ class Visualizer(BaseVisualizer):
                 phase space selection in order: spatial, momentum component,
                 e.g. 'ypy' or 'ypx'
         """
-        ax = self._ax_or_gca(ax)
+        self.ax = self._ax_or_gca(ax)
         super(Visualizer, self).visualize(ax, **kwargs)
 
     def clear_cbar(self):

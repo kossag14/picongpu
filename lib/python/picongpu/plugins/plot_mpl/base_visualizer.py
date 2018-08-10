@@ -93,4 +93,4 @@ class Visualizer(object):
         if self.plt_obj is None:
             self._create_plt_obj(ax)
         else:
-            self._update_plt_obj(ax)
+            self._update_plt_obj()
