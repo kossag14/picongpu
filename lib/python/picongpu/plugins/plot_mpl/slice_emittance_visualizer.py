@@ -82,8 +82,8 @@ class Visualizer(BaseVisualizer):
         if self.iteration is None or species is None:
             raise ValueError("Iteration and species have to be provided as\
             keyword arguments!")
-        ax.set_xlabel('y-slice [µm]')
-        ax.set_ylabel('emittance [pi mm mrad]')
+        ax.set_xlabel(r'y-slice [$\mathrm{\mu m}$]')
+        ax.set_ylabel(r'emittance [$\mathrm{\pi mm mrad}$]')
         ax.set_title('slice emittance for species ' +
                      species + ', filter = ' + species_filter)
 
