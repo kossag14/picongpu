@@ -94,7 +94,7 @@ class Visualizer(BaseVisualizer):
         species = kwargs.get('species')
         species_filter = kwargs.get('species_filter', 'all')
         ax.set_xlabel('time [ps]')
-        ax.set_ylabel('emittance [pi mm mrad]')
+        ax.set_ylabel(r'emittance [$\mathrm{\pi mm mrad}$]')
         ax.set_title('emittance for species ' +
                      species + ', filter = ' + species_filter)
 

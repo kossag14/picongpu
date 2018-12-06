@@ -53,8 +53,8 @@ class Visualizer(BaseVisualizer):
         self.plt_lin = ax.axhline(self.itera * 1.39e-16 * 1.e12,
                                   color='#FF6600')
         self.cbar = plt.colorbar(self.plt_obj, ax=ax)
-        self.cbar.set_label(r'emittance [pi mm mrad]')
-        ax.set_xlabel('y-slice [µm]')
+        self.cbar.set_label(r'emittance [$\mathrm{\pi mm mrad}$]')
+        ax.set_xlabel(r'y-slice [$\mathrm{\mu m}$]')
         ax.set_ylabel('time [ps]')
 
     def _update_plt_obj(self):
