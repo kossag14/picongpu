@@ -21,7 +21,7 @@ Overview
    :alt: overview of PIConGPU library dependencies
 
    Overview of inter-library dependencies for parallel execution of PIConGPU on a typical HPC system. Due to common binary incompatibilities between compilers, MPI and boost versions, we recommend to organize software with a version-aware package manager such as `spack <https://github.com/spack/spack>`_ and to deploy a hierarchical module system such as `lmod <https://github.com/TACC/Lmod>`_.
-   A Lmod example setup can be found `here <https://github.com/ComputationalRadiationPhysics/compileNode>`_.
+   An Lmod example setup can be found `here <https://github.com/ComputationalRadiationPhysics/compileNode>`_.
 
 Requirements
 ------------
@@ -119,7 +119,7 @@ rsync
 - *Arch Linux:* ``sudo pacman --sync rsync``
 - *Spack:* ``spack install rsync``
 
-alpaka 0.3.3
+alpaka 0.3.4
 """"""""""""
 - `alpaka <https://github.com/ComputationalRadiationPhysics/alpaka>`_ is included in the PIConGPU source code
 
@@ -206,7 +206,7 @@ libSplash
   - ``mkdir -p ~/src ~/build ~/lib``
   - ``git clone https://github.com/ComputationalRadiationPhysics/libSplash.git ~/src/splash/``
   - ``cd ~/build``
-  - ``cmake -DCMAKE_INSTALL_PREFIX=$HOME/lib/splash -DSplash_USE_MPI=ON -DSplash_USE_PARALLE=ON ~/src/splash``
+  - ``cmake -DCMAKE_INSTALL_PREFIX=$HOME/lib/splash -DSplash_USE_MPI=ON -DSplash_USE_PARALLEL=ON ~/src/splash``
   - ``make install``
 
 - *environment:* (assumes install from source in ``$HOME/lib/splash``)
@@ -217,7 +217,7 @@ libSplash
 HDF5
 """"
 - 1.8.6+
-- standard shared version (no c++, enable parallel)
+- standard shared version (no C++, enable parallel)
 - *Debian/Ubuntu:* ``sudo apt-get install libhdf5-openmpi-dev``
 - *Arch Linux:* ``sudo pacman --sync hdf5-openmpi``
 - *Spack:* ``spack install hdf5~fortran``
@@ -260,7 +260,7 @@ splash2txt
 png2gas
 """""""
 - requires *libSplash*, *pngwriter* and *boost* ``program_options``)
-- converts png files to hdf5 files that can be used as an input for a species initial density profiles
+- converts png files to hdf5 files that can be used as an input for species initial density profiles
 - compile and install exactly as *splash2txt* above
 
 ADIOS

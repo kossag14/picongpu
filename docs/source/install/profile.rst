@@ -21,6 +21,12 @@ We listed some example ``picongpu.profile`` files below which can be used to set
 Hemera (HZDR)
 -------------
 
+**System overview:** `link (internal) <https://www.hzdr.de/db/Cms?pOid=29813>`_
+
+**User guide:** *None*
+
+**Production directory:** ``/bigdata/hplsim/`` with ``external/``, ``scratch/``, ``development/`` and ``production/``
+
 For this profile to work, you need to download the :ref:`PIConGPU source code <install-dependencies-picongpu>` manually.
 
 Queue: defq (2x Intel Xeon Gold 6148, 20 Cores + 20 HyperThreads/CPU)
@@ -37,6 +43,12 @@ Queue: gpu (4x NVIDIA P100 16GB)
 
 Hypnos (HZDR)
 -------------
+
+**System overview:** `link (internal) <https://www.hzdr.de/db/Cms?pOid=29813>`_
+
+**User guide:** `link (internal) <http://hypnos3/wiki>`_
+
+**Production directory:** ``/bigdata/hplsim/`` with ``external/``, ``scratch/``, ``development/`` and ``production/``
 
 For these profiles to work, you need to download the :ref:`PIConGPU source code <install-dependencies-picongpu>` manually.
 
@@ -61,6 +73,12 @@ Queue: k80 (Nvidia K80 GPUs)
 Hydra (HZDR)
 -------------
 
+**System overview:** `link (internal) <https://www.hzdr.de/db/Cms?pOid=29813>`_
+
+**User guide:** `link (internal) <http://hypnos3/wiki>`_
+
+**Production directory:** ``/bigdata/hplsim/`` with ``external/``, ``scratch/``, ``development/`` and ``production/``
+
 For this profile to work, you need to download the :ref:`PIConGPU source code <install-dependencies-picongpu>` manually.
 
 .. literalinclude:: profiles/hydra-hzdr/default_picongpu.profile.example
@@ -69,13 +87,35 @@ For this profile to work, you need to download the :ref:`PIConGPU source code <i
 Titan (ORNL)
 ------------
 
+**System overview:** `link <https://www.olcf.ornl.gov/olcf-resources/compute-systems/titan/>`_
+
+**User guide:** `link <https://www.olcf.ornl.gov/for-users/system-user-guides/titan/>`_
+
+**Production directory:** usually ``$PROJWORK/$proj/`` (`link <https://www.olcf.ornl.gov/for-users/system-user-guides/titan/file-systems/>`_).
+Note that ``$HOME`` is not mounted on compute nodes, place your ``picongpu.profile`` and auxiliary software in your production directory.
+
 For this profile to work, you need to download the :ref:`PIConGPU source code <install-dependencies-picongpu>` and install :ref:`libSplash, libpng and PNGwriter <install-dependencies>` manually.
 
-.. literalinclude:: profiles/titan-ornl/picongpu.profile.example
+K20x GPUs (recommended)
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. literalinclude:: profiles/titan-ornl/gpu_picongpu.profile.example
+   :language: bash
+
+AMD Opteron 6274 (Interlagos) CPUs (for experiments)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. literalinclude:: profiles/titan-ornl/cpu_picongpu.profile.example
    :language: bash
 
 Piz Daint (CSCS)
 ----------------
+
+**System overview:** `link <https://www.cscs.ch/computers/piz-daint/>`_
+
+**User guide:** `link <https://user.cscs.ch/>`_
+
+**Production directory:** ``$SCRATCH`` (`link <https://user.cscs.ch/storage/file_systems/>`_).
 
 For this profile to work, you need to download the :ref:`PIConGPU source code <install-dependencies-picongpu>` and install :ref:`boost, zlib, libpng, c-blosc, PNGwriter, libSplash and ADIOS <install-dependencies>` manually.
 
@@ -93,6 +133,12 @@ For this profile to work, you need to download the :ref:`PIConGPU source code <i
 
 Taurus (TU Dresden)
 -------------------
+
+**System overview:** `link <https://tu-dresden.de/zih/hochleistungsrechnen/hpc>`_
+
+**User guide:** `link <https://doc.zih.tu-dresden.de/hpc-wiki/bin/view/Compendium/SystemTaurus>`_
+
+**Production directory:** ``/scratch/$USER/`` and ``/scratch/$proj/``
 
 For these profiles to work, you need to download the :ref:`PIConGPU source code <install-dependencies-picongpu>` and install :ref:`PNGwriter and libSplash <install-dependencies>` manually.
 
@@ -119,19 +165,26 @@ For this profile, you additionally need to install your own :ref:`boost <install
 Lawrencium (LBNL)
 -----------------
 
+**System overview:** `link <http://scs.lbl.gov/Systems>`_
+
+**User guide:** `link <https://sites.google.com/a/lbl.gov/high-performance-computing-services-group/lbnl-supercluster/lawrencium>`_
+
+**Production directory:** ``/global/scratch/$USER/``
+
 For this profile to work, you need to download the :ref:`PIConGPU source code <install-dependencies-picongpu>` and install :ref:`boost, PNGwriter and libSplash <install-dependencies>` manually.
 Additionally, you need to make the ``rsync`` command available as written below.
 
 .. literalinclude:: profiles/lawrencium-lbnl/picongpu.profile.example
    :language: bash
 
-Judge (FZJ)
------------
-
-(example missing)
-
 Draco (MPCDF)
 -------------
+
+**System overview:** `link <https://www.mpcdf.mpg.de/services/computing/draco/about-the-system>`_
+
+**User guide:** `link <https://www.mpcdf.mpg.de/services/computing/draco>`_
+
+**Production directory:** ``/ptmp/$USER/``
 
 For this profile to work, you need to download the :ref:`PIConGPU source code <install-dependencies-picongpu>` and install :ref:`libpng, PNGwriter and libSplash <install-dependencies>` manually.
 

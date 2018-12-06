@@ -1,5 +1,5 @@
-PIConGPU - A Many GPGPU PIC Code
-================================================================
+PIConGPU - Particle-in-Cell Simulations for the Exascale Era
+============================================================
 
 [![Code Status master](https://img.shields.io/travis/ComputationalRadiationPhysics/picongpu/master.svg?label=master)](https://travis-ci.org/ComputationalRadiationPhysics/picongpu/branches)
 [![Code Status dev](https://img.shields.io/travis/ComputationalRadiationPhysics/picongpu/dev.svg?label=dev)](https://travis-ci.org/ComputationalRadiationPhysics/picongpu/branches)
@@ -15,8 +15,8 @@ PIConGPU - A Many GPGPU PIC Code
 Introduction
 ------------
 
-PIConGPU is a fully relativistic, many
-[GPGPU](http://en.wikipedia.org/wiki/Graphics_processing_unit),
+PIConGPU is a fully relativistic,
+[manycore](https://en.wikipedia.org/wiki/Manycore_processor),
 3D3V particle-in-cell ([PIC](http://en.wikipedia.org/wiki/Particle-in-cell))
 code. The Particle-in-Cell algorithm is a central tool in plasma physics.
 It describes the dynamics of a plasma by computing the motion of
@@ -59,9 +59,10 @@ a wide range of tools and diagnostics, e.g.:
   extreme I/O scalability and massively parallel online-analysis
 - 2D and 3D live view and diagnostics tools
 - a large selection of extensible
-  [online-plugins](https://github.com/ComputationalRadiationPhysics/picongpu/wiki/PIConGPU-Plugins)
+  [online-plugins](http://picongpu.readthedocs.io/en/latest/usage/plugins.html)
 
-Todays GPUs provide a computational performance of several
+As one of our supported compute platforms, GPUs provide a computational
+performance of several
 [TFLOP/s](http://en.wikipedia.org/wiki/FLOPS) at considerable lower invest and
 maintenance costs compared to multi CPU-based compute architectures of similar
 performance. The latest high-performance systems
@@ -72,7 +73,7 @@ PIConGPU was one of the **finalists** of the 2013
 [Gordon Bell Prize](http://sc13.supercomputing.org/content/acm-gordon-bell-prize).
 
 PIConGPU is developed and maintained by the
-[Computational Radiation Physics Group](http://www.hzdr.de/db/Cms?pNid=132&pOid=30354)
+[Computational Radiation Physics Group](https://www.hzdr.de/db/Cms?pNid=2097)
 at the [Institute for Radiation Physics](http://www.hzdr.de/db/Cms?pNid=132)
 at [HZDR](http://www.hzdr.de/) in close collaboration with the Center
 for Information Services and High Performance Computing
@@ -199,7 +200,7 @@ Active Team
 ### Scientific Supervision
 
 - Dr. Michael Bussmann
-- Dr.-Ing. Guido Juckeland
+- Axel Huebl
 
 ### Maintainers* and core developers
 
@@ -209,7 +210,9 @@ Active Team
 - Axel Huebl*
 - Alexander Matthes
 - Richard Pausch*
+- Sophie Rudat
 - Sebastian Starke
+- Dr. Klaus Steiniger
 - Rene Widera*
 
 ### Former Members, Contributions and Thanks
@@ -217,10 +220,10 @@ Active Team
 The PIConGPU Team expresses its gratitude to:
 
 Florian Berninger, Heiko Burau, Robert Dietrich, Carlchristian Eckert,
-Wen Fu, Ph.D., Alexander Grund, Anton Helm, Wolfgang Hoehnig, Maximilian
-Knespel, Dr. Remi Lehe, Felix Schmitt, Benjamin Schneider, Joseph Schuchart,
-Conrad Schumann, Klaus Steiniger, Stefan Tietze, Marija Vranic, Ph.D.,
-Benjamin Worpitz, Erik Zenker, Alexander Matthes
+Wen Fu, Ph.D., Alexander Grund, Sebastian Hahn, Anton Helm, Wolfgang Hoehnig,
+Dr.-Ing. Guido Juckeland, Jeffrey Kelling, Maximilian Knespel, Dr. Remi Lehe,
+Felix Schmitt, Benjamin Schneider, Joseph Schuchart, Conrad Schumann,
+Stefan Tietze, Marija Vranic, Ph.D., Benjamin Worpitz, and Erik Zenker.
 
 Kudos to everyone, mentioned or unmentioned, who contributed further in any
 way!
