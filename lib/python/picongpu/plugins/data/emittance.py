@@ -117,16 +117,16 @@ class Emittance(object):
             The iteration at which to read the data.
             A list of iterations is allowed as well.
             ``None`` refers to the list of all available iterations.
-        sum : float 
+        sum : float
             emittance value [m rad] without slicing
 
         Returns
         -------
         slice_emit : np.array of float
             slice emittance [m rad] for each y_slice
-            If iteration is a list, returns (ordered) dict with 
+            If iteration is a list, returns (ordered) dict with
             iterations as its index.
-        y_slices : np.array of float 
+        y_slices : np.array of float
             beginning of each slice [m]
         iteration : (unsigned) int [unitless]
             The iteration at which to read the data.
@@ -160,7 +160,7 @@ class Emittance(object):
             'iteration',
             'sum'
         ] + list(y_slices)
-        
+
         # set iteration as index
         data.set_index('iteration', inplace=True)
 
@@ -180,4 +180,4 @@ class Emittance(object):
                     data.loc[iteration].values
                 )), y_slices, iteration
         else:
-            return data.loc[iteration].values[0,:], y_slices, iteration
+            return data.loc[iteration].values[0, :], y_slices, iteration

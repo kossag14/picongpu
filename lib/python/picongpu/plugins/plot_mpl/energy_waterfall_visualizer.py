@@ -12,6 +12,7 @@ from picongpu.plugins.plot_mpl.base_visualizer import Visualizer as\
 import numpy as np
 from matplotlib.colors import LogNorm
 
+
 class Visualizer(BaseVisualizer):
     """
     Class for creation of histogram plots on a logscaled y-axis.
@@ -43,11 +44,11 @@ class Visualizer(BaseVisualizer):
         np_data = np.zeros((len(bins), len(iteration)))
         for index, ts in enumerate(iteration):
             np_data[:, index] = counts[ts]
-        max_iter = max(iteration* 1.39e-16 * 1.e12)
-        self.plt_obj = ax.imshow(np_data,aspect="auto", 
+        max_iter = max(iteration * 1.39e-16 * 1.e12)
+        self.plt_obj = ax.imshow(np_data, aspect="auto",
                                  norm=LogNorm(), origin="lower",
-                                 extent=(0,max_iter,0,max(bins*1.e-3)))
-        self.plt_lin = ax.axvline(self.itera* 1.39e-16 * 1.e12,
+                                 extent=(0, max_iter, 0, max(bins*1.e-3)))
+        self.plt_lin = ax.axvline(self.itera * 1.39e-16 * 1.e12,
                                   color='#FF6600')
         self.cbar = plt.colorbar(self.plt_obj, ax=self.ax)
         self.cbar.set_label(r'Count')
@@ -64,11 +65,11 @@ class Visualizer(BaseVisualizer):
             np_data[:, index] = counts[ts]
         self.plt_obj.set_data(np_data)
         self.plt_lin.remove()
-        self.plt_lin=self.ax.axvline(self.itera* 1.39e-16 * 1.e12,
-                                     color='#FF6600')
+        self.plt_lin = self.ax.axvline(self.itera * 1.39e-16 * 1.e12,
+                                       color='#FF6600')
         self.plt_obj.autoscale()
         self.ax.relim()
-        self.ax.autoscale_view(True,True,True)
+        self.ax.autoscale_view(True, True, True)
         self.cbar.update_normal(self.plt_obj)
 
     def visualize(self, ax=None, **kwargs):
@@ -95,10 +96,9 @@ class Visualizer(BaseVisualizer):
         """
         self.ax = self._ax_or_gca(ax)
         self.itera = kwargs.get('iteration')
-        kwargs['iteration']=None
+        kwargs['iteration'] = None
         # this already throws error if no species or iteration in kwargs
         super(Visualizer, self).visualize(ax, **kwargs)
-        iteration = None
         species = kwargs.get('species')
         species_filter = kwargs.get('species_filter', 'all')
         ax.set_title('Energy Histogram for species ' +
@@ -108,6 +108,7 @@ class Visualizer(BaseVisualizer):
         """Clear colorbar if present."""
         if self.cbar is not None:
             self.cbar.remove()
+
 
 if __name__ == '__main__':
 

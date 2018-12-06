@@ -57,9 +57,9 @@ class Visualizer(BaseVisualizer):
             origin='lower',
             norm=LogNorm())
         self.cbar = plt.colorbar(self.plt_obj, ax=self.ax)
-        self.cbar.set_label(
-            r'$Q / \mathrm{d}r \mathrm{d}p$ [$\mathrm{C s kg^{-1} m^{-2}}$] ')
-        self.ax.set_xlabel(r'${0}$ [${1}$]'.format(meta.r, "\mathrm{\mu m}"))
+        self.cbar.set_label(r'$Q / \mathrm{d}r \mathrm{d}p$',
+                            r'[$\mathrm{C s kg^{-1} m^{-2}}$]')
+        self.ax.set_xlabel(r'${0}$ [$\mathrm{\mu m}$]'.format(meta.r))
         self.ax.set_ylabel(r'$p_{0}$ [$\beta\gamma$]'.format(meta.p))
 
     def _update_plt_obj(self):

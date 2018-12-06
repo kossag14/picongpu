@@ -15,7 +15,7 @@ from matplotlib.colors import LogNorm
 
 class Visualizer(BaseVisualizer):
     """
-    Class for creation of waterfall plot with the slice emittance value 
+    Class for creation of waterfall plot with the slice emittance value
     for each y_slice (x-axis) and iteration (y-axis).
     """
 
@@ -45,12 +45,12 @@ class Visualizer(BaseVisualizer):
         np_data = np.zeros((len(y_slices), len(iteration)))
         for index, ts in enumerate(iteration):
             np_data[:, index] = slice_emit[ts][1:]
-        max_iter = max(iteration* 1.39e-16 * 1.e12)
-        self.plt_obj = ax.imshow(np_data.T*1.e6,aspect="auto", 
-                                norm=LogNorm(), origin="lower", 
-                                vmin=1e-1, vmax=1e2,
-                                extent=(0,max(y_slices*1.e6),0,max_iter))
-        self.plt_lin = ax.axhline(self.itera* 1.39e-16 * 1.e12,
+        max_iter = max(iteration * 1.39e-16 * 1.e12)
+        self.plt_obj = ax.imshow(np_data.T*1.e6, aspect="auto",
+                                 norm=LogNorm(), origin="lower",
+                                 vmin=1e-1, vmax=1e2,
+                                 extent=(0, max(y_slices*1.e6), 0, max_iter))
+        self.plt_lin = ax.axhline(self.itera * 1.39e-16 * 1.e12,
                                   color='#FF6600')
         self.cbar = plt.colorbar(self.plt_obj, ax=ax)
         self.cbar.set_label(r'emittance [pi mm mrad]')
@@ -67,9 +67,9 @@ class Visualizer(BaseVisualizer):
             np_data[:, index] = slice_emit[ts][1:]
         self.plt_obj.set_data(np_data.T*1.e6)
         self.plt_lin.remove()
-        self.plt_lin=self.ax.axhline(self.itera* 1.39e-16 * 1.e12,color='#FF6600')
+        self.plt_lin = self.ax.axhline(self.itera * 1.39e-16 * 1.e12,
+                                       color='#FF6600')
         self.cbar.update_normal(self.plt_obj)
-
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -95,7 +95,7 @@ class Visualizer(BaseVisualizer):
         """
         self.ax = self._ax_or_gca(ax)
         self.itera = kwargs.get('iteration')
-        kwargs['iteration']=None
+        kwargs['iteration'] = None
         super(Visualizer, self).visualize(ax, **kwargs)
         species = kwargs.get('species')
         species_filter = kwargs.get('species_filter', 'all')
@@ -106,6 +106,7 @@ class Visualizer(BaseVisualizer):
         """Clear colorbar if present."""
         if self.cbar is not None:
             self.cbar.remove()
+
 
 if __name__ == '__main__':
 

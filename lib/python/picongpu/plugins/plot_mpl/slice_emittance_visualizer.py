@@ -9,8 +9,6 @@ License: GPLv3+
 from picongpu.plugins.emittance import Emittance
 from picongpu.plugins.plot_mpl.base_visualizer import Visualizer as\
     BaseVisualizer, plt
-import numpy as np
-from matplotlib.colors import LogNorm
 
 
 class Visualizer(BaseVisualizer):
@@ -41,7 +39,7 @@ class Visualizer(BaseVisualizer):
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
         slice_emit, y_slices, iteration = self.data
-        self.plt_obj = ax.plot(y_slices*1.e6, slice_emit[1:]*1.e6, 
+        self.plt_obj = ax.plot(y_slices*1.e6, slice_emit[1:]*1.e6,
                                scalex=True, scaley=True)[0]
 
     def _update_plt_obj(self):
@@ -51,8 +49,8 @@ class Visualizer(BaseVisualizer):
         slice_emit, y_slices, iteration = self.data
         ax = self._ax_or_gca(None)
         self.plt_obj.set_data(y_slices*1.e6, slice_emit[1:]*1.e6)
-        self.ax.relim()
-        self.ax.autoscale_view(True,True,True)
+        ax.relim()
+        ax.autoscale_view(True, True, True)
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -77,7 +75,7 @@ class Visualizer(BaseVisualizer):
 
         """
         self.ax = self._ax_or_gca(ax)
-        self.iteration= kwargs.get('iteration')
+        self.iteration = kwargs.get('iteration')
         super(Visualizer, self).visualize(ax, **kwargs)
         species = kwargs.get('species')
         species_filter = kwargs.get('species_filter', 'all')
@@ -88,6 +86,7 @@ class Visualizer(BaseVisualizer):
         ax.set_ylabel('emittance [pi mm mrad]')
         ax.set_title('slice emittance for species ' +
                      species + ', filter = ' + species_filter)
+
 
 if __name__ == '__main__':
 
