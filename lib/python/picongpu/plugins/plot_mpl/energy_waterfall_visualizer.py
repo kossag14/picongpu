@@ -6,7 +6,7 @@ Authors: Sophie Rudat, Sebastian Starke
 License: GPLv3+
 """
 
-from picongpu.plugins.energy_histogram import EnergyHistogram
+from picongpu.plugins.data import EnergyHistogramData
 from picongpu.plugins.plot_mpl.base_visualizer import Visualizer as\
     BaseVisualizer, plt
 import numpy as np

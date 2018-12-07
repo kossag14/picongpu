@@ -12,7 +12,7 @@ import os
 import collections
 
 
-class Emittance(object):
+class EmittanceData(object):
     """
     Data Reader for the emittance plugin
     """
