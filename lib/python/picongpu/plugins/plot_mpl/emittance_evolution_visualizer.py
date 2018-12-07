@@ -49,7 +49,7 @@ class Visualizer(BaseVisualizer):
                                 np_data * 1.e6, scalex=True, scaley=True)
         if self.iteration:
             self.plt_lin = ax.axvline(self.iteration * 1.39e-16 * ps,
-                                  color='#FF6600')
+                                      color='#FF6600')
 
     def _update_plt_obj(self):
         """
@@ -66,7 +66,7 @@ class Visualizer(BaseVisualizer):
         self.plt_obj.set_data(all_iterations * 1.39e-16 * ps, np_data * 1.e6)
         if self.iteration:
             self.plt_lin = self.ax.axvline(self.iteration * 1.39e-16 * ps,
-                                       color='#FF6600')
+                                           color='#FF6600')
         self.ax.relim()
         self.ax.autoscale_view(True, True, True)
 

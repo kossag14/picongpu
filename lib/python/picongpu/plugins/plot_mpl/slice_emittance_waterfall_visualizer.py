@@ -47,7 +47,7 @@ class Visualizer(BaseVisualizer):
             np_data[:, index] = slice_emit[ts][1:]
         ps = 1.e12  # for conversion from s to ps
         max_iter = max(all_iterations * 1.39e-16 * ps)
-        # np_data.T * 1.e6 converts emittance to pi mm mrad, 
+        # np_data.T * 1.e6 converts emittance to pi mm mrad,
         # y_slices * 1.e6 converts y slice position to micrometer
         self.plt_obj = ax.imshow(np_data.T * 1.e6, aspect="auto",
                                  norm=LogNorm(), origin="lower",
@@ -55,7 +55,7 @@ class Visualizer(BaseVisualizer):
                                  extent=(0, max(y_slices*1.e6), 0, max_iter))
         if self.iteration:
             self.plt_lin = ax.axhline(self.iteration * 1.39e-16 * ps,
-                                  color='#FF6600')
+                                      color='#FF6600')
         self.cbar = plt.colorbar(self.plt_obj, ax=ax)
         self.cbar.set_label(r'emittance [$\mathrm{\pi mm mrad}$]')
         ax.set_xlabel(r'y-slice [$\mathrm{\mu m}$]')
@@ -75,7 +75,7 @@ class Visualizer(BaseVisualizer):
         ps = 1.e12  # for conversion from s to ps
         if self.iteration:
             self.plt_lin = self.ax.axhline(self.iteration * 1.39e-16 * ps,
-                                       color='#FF6600')
+                                           color='#FF6600')
         self.cbar.update_normal(self.plt_obj)
 
     def visualize(self, ax=None, **kwargs):
