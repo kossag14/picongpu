@@ -2,7 +2,7 @@
 This file is part of the PIConGPU.
 
 Copyright 2017-2018 PIConGPU contributors
-Authors: Sophie Rudat
+Authors: Sophie Rudat, Sebastian Starke
 License: GPLv3+
 """
 
@@ -39,6 +39,8 @@ class Visualizer(BaseVisualizer):
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
         slice_emit, y_slices, iteration = self.data
+        # slice_emit * 1.e6 converts emittance to pi mm mrad,
+        # y_slices*1.e6 converts positon of y slice to micrometer
         self.plt_obj = ax.plot(y_slices*1.e6, slice_emit[1:]*1.e6,
                                scalex=True, scaley=True)[0]
 
@@ -48,6 +50,8 @@ class Visualizer(BaseVisualizer):
         """
         slice_emit, y_slices, iteration = self.data
         ax = self._ax_or_gca(None)
+        # slice_emit * 1.e6 converts emittance to pi mm mrad
+        # y_slices*1.e6 converts positon of y slice to micrometer
         self.plt_obj.set_data(y_slices*1.e6, slice_emit[1:]*1.e6)
         ax.relim()
         ax.autoscale_view(True, True, True)

@@ -2,7 +2,7 @@
 This file is part of the PIConGPU.
 
 Copyright 2017-2018 PIConGPU contributors
-Authors: Sophie Rudat
+Authors: Sophie Rudat, Sebastian Starke
 License: GPLv3+
 """
 
@@ -41,16 +41,20 @@ class Visualizer(BaseVisualizer):
         Implementation of base class function.
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
-        slice_emit, y_slices, iteration = self.data
-        np_data = np.zeros((len(y_slices), len(iteration)))
-        for index, ts in enumerate(iteration):
+        slice_emit, y_slices, all_iterations = self.data
+        np_data = np.zeros((len(y_slices), len(all_iterations)))
+        for index, ts in enumerate(all_iterations):
             np_data[:, index] = slice_emit[ts][1:]
-        max_iter = max(iteration * 1.39e-16 * 1.e12)
-        self.plt_obj = ax.imshow(np_data.T*1.e6, aspect="auto",
+        ps = 1.e12  # for conversion from s to ps
+        max_iter = max(all_iterations * 1.39e-16 * ps)
+        # np_data.T * 1.e6 converts emittance to pi mm mrad, 
+        # y_slices * 1.e6 converts y slice position to micrometer
+        self.plt_obj = ax.imshow(np_data.T * 1.e6, aspect="auto",
                                  norm=LogNorm(), origin="lower",
                                  vmin=1e-1, vmax=1e2,
                                  extent=(0, max(y_slices*1.e6), 0, max_iter))
-        self.plt_lin = ax.axhline(self.itera * 1.39e-16 * 1.e12,
+        if self.iteration:
+            self.plt_lin = ax.axhline(self.iteration * 1.39e-16 * ps,
                                   color='#FF6600')
         self.cbar = plt.colorbar(self.plt_obj, ax=ax)
         self.cbar.set_label(r'emittance [$\mathrm{\pi mm mrad}$]')
@@ -61,13 +65,16 @@ class Visualizer(BaseVisualizer):
         """
         Implementation of base class function.
         """
-        slice_emit, y_slices, iteration = self.data
-        np_data = np.zeros((len(y_slices), len(iteration)))
-        for index, ts in enumerate(iteration):
+        slice_emit, y_slices, all_iterations = self.data
+        np_data = np.zeros((len(y_slices), len(all_iterations)))
+        for index, ts in enumerate(all_iterations):
             np_data[:, index] = slice_emit[ts][1:]
         self.plt_obj.set_data(np_data.T*1.e6)
-        self.plt_lin.remove()
-        self.plt_lin = self.ax.axhline(self.itera * 1.39e-16 * 1.e12,
+        if self.plt_lin:
+            self.plt_lin.remove()
+        ps = 1.e12  # for conversion from s to ps
+        if self.iteration:
+            self.plt_lin = self.ax.axhline(self.iteration * 1.39e-16 * ps,
                                        color='#FF6600')
         self.cbar.update_normal(self.plt_obj)
 
@@ -94,7 +101,7 @@ class Visualizer(BaseVisualizer):
 
         """
         self.ax = self._ax_or_gca(ax)
-        self.itera = kwargs.get('iteration')
+        self.iteration = kwargs.get('iteration')
         kwargs['iteration'] = None
         super(Visualizer, self).visualize(ax, **kwargs)
         species = kwargs.get('species')
@@ -118,8 +125,8 @@ if __name__ == '__main__':
             print("usage:")
             print(
                 "python", sys.argv[0],
-                "-p <path to run_directory> -i <iteration>"
-                " -s <particle species> -f <species_filter>")
+                "-p <path to run_directory>"
+                " -s <particle species> -f <species_filter> -i <iteration>")
 
         path = None
         iteration = None

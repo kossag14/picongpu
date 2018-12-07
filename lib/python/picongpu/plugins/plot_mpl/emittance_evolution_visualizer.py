@@ -2,7 +2,7 @@
 This file is part of the PIConGPU.
 
 Copyright 2017-2018 PIConGPU contributors
-Authors: Sophie Rudat
+Authors: Sophie Rudat, Sebastian Starke
 License: GPLv3+
 """
 
@@ -39,27 +39,33 @@ class Visualizer(BaseVisualizer):
         Implementation of base class function.
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
-        emit, y_slices, iteration = self.data
-        np_data = np.zeros(len(iteration))
-        for index, ts in enumerate(iteration):
+        emit, y_slices, all_iterations = self.data
+        np_data = np.zeros(len(all_iterations))
+        for index, ts in enumerate(all_iterations):
             np_data[index] = emit[ts][0]
-        self.plt_obj, = ax.plot(iteration * 1.39e-16 * 1.e12,
+        ps = 1.e12  # for conversion from s to ps
+        # np_data * 1.e6 converts emittance to pi mm mrad
+        self.plt_obj, = ax.plot(all_iterations * 1.39e-16 * ps,
                                 np_data * 1.e6, scalex=True, scaley=True)
-        self.plt_lin = ax.axvline(self.itera * 1.39e-16 * 1.e12,
+        if self.iteration:
+            self.plt_lin = ax.axvline(self.iteration * 1.39e-16 * ps,
                                   color='#FF6600')
 
     def _update_plt_obj(self):
         """
         Implementation of base class function.
         """
-        emit, y_slices, iteration = self.data
-        np_data = np.zeros(len(iteration))
-        for index, ts in enumerate(iteration):
+        emit, y_slices, all_iterations = self.data
+        np_data = np.zeros(len(all_iterations))
+        for index, ts in enumerate(all_iterations):
             np_data[index] = emit[ts][0]
         if self.plt_lin:
             self.plt_lin.remove()
-        self.plt_obj.set_data(iteration * 1.39e-16 * 1.e12, np_data*1.e6)
-        self.plt_lin = self.ax.axvline(self.itera * 1.39e-16 * 1.e12,
+        ps = 1.e12  # for conversion from s to ps
+        # np_data * 1.e6 converts emittance to pi mm mrad
+        self.plt_obj.set_data(all_iterations * 1.39e-16 * ps, np_data * 1.e6)
+        if self.iteration:
+            self.plt_lin = self.ax.axvline(self.iteration * 1.39e-16 * ps,
                                        color='#FF6600')
         self.ax.relim()
         self.ax.autoscale_view(True, True, True)
@@ -109,8 +115,8 @@ if __name__ == '__main__':
             print("usage:")
             print(
                 "python", sys.argv[0],
-                "-p <path to run_directory> -i <iteration>"
-                " -s <particle species> -f <species_filter>")
+                "-p <path to run_directory>"
+                " -s <particle species> -f <species_filter> -i <iteration>")
 
         path = None
         iteration = None
