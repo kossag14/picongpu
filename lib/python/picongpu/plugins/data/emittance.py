@@ -2,7 +2,7 @@
 This file is part of the PIConGPU.
 
 Copyright 2017-2018 PIConGPU contributors
-Authors: Sophie Rudat
+Authors: Sophie Rudat, Axel Huebl
 License: GPLv3+
 """
 
@@ -95,7 +95,6 @@ class Emittance(object):
 
         # the first column contains the iterations
         return pd.read_csv(data_file_path,
-                           skiprows=1,
                            usecols=(0,),
                            delimiter=" ",
                            dtype=np.uint64).values[:, 0]
@@ -141,7 +140,6 @@ class Emittance(object):
         # read whole file as pandas.DataFrame
         data = pd.read_csv(
             data_file_path,
-            skiprows=1,
             delimiter=" "
         )
 
@@ -172,7 +170,7 @@ class Emittance(object):
         if not set(iteration).issubset(data.index.values):
             raise IndexError('Iteration {} is not available!\n'
                              'List of available iterations: \n'
-                             '{}'.format(iteration, data['iteration']))
+                             '{}'.format(iteration, data.index.values))
 
         if len(iteration) > 1:
             return collections.OrderedDict(zip(
