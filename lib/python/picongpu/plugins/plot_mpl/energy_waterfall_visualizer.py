@@ -2,7 +2,7 @@
 This file is part of the PIConGPU.
 
 Copyright 2017-2018 PIConGPU contributors
-Authors: Sophie Rudat
+Authors: Sophie Rudat, Sebastian Starke
 License: GPLv3+
 """
 
@@ -40,16 +40,18 @@ class Visualizer(BaseVisualizer):
         Implementation of base class function.
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
-        counts, bins, iteration = self.data
-        np_data = np.zeros((len(bins), len(iteration)))
-        for index, ts in enumerate(iteration):
+        counts, bins, all_iterations = self.data
+        np_data = np.zeros((len(bins), len(all_iterations)))
+        for index, ts in enumerate(all_iterations):
             np_data[:, index] = counts[ts]
-        max_iter = max(iteration * 1.39e-16 * 1.e12)
+        max_iter = max(all_iterations * 1.39e-16 * 1.e12)
         self.plt_obj = ax.imshow(np_data, aspect="auto",
                                  norm=LogNorm(), origin="lower",
                                  extent=(0, max_iter, 0, max(bins*1.e-3)))
-        self.plt_lin = ax.axvline(self.itera * 1.39e-16 * 1.e12,
-                                  color='#FF6600')
+        ps = 1.e12  # for conversion from s to ps
+        if self.iteration:
+            self.plt_lin = ax.axvline(self.iteration * 1.39e-16 * ps,
+                                      color='#FF6600')
         self.cbar = plt.colorbar(self.plt_obj, ax=self.ax)
         self.cbar.set_label(r'Count')
         ax.set_xlabel('time [ps]')
@@ -59,14 +61,16 @@ class Visualizer(BaseVisualizer):
         """
         Implementation of base class function.
         """
-        counts, bins, iteration = self.data
-        np_data = np.zeros((len(bins), len(iteration)))
-        for index, ts in enumerate(iteration):
+        counts, bins, all_iterations = self.data
+        np_data = np.zeros((len(bins), len(all_iterations)))
+        for index, ts in enumerate(all_iterations):
             np_data[:, index] = counts[ts]
         self.plt_obj.set_data(np_data)
         self.plt_lin.remove()
-        self.plt_lin = self.ax.axvline(self.itera * 1.39e-16 * 1.e12,
-                                       color='#FF6600')
+        ps = 1.e12  # for conversion from s to ps
+        if self.iteration:
+            self.plt_lin = self.ax.axvline(self.iteration * 1.39e-16 * ps,
+                                           color='#FF6600')
         self.plt_obj.autoscale()
         self.ax.relim()
         self.ax.autoscale_view(True, True, True)
@@ -95,7 +99,7 @@ class Visualizer(BaseVisualizer):
 
         """
         self.ax = self._ax_or_gca(ax)
-        self.itera = kwargs.get('iteration')
+        self.iteration = kwargs.get('iteration')
         kwargs['iteration'] = None
         # this already throws error if no species or iteration in kwargs
         super(Visualizer, self).visualize(ax, **kwargs)
@@ -120,8 +124,8 @@ if __name__ == '__main__':
             print("usage:")
             print(
                 "python", sys.argv[0],
-                "-p <path to run_directory> -i <iteration>"
-                " -s <particle species> -f <species_filter>")
+                "-p <path to run_directory>"
+                " -s <particle species> -f <species_filter> -i <iteration>")
 
         path = None
         iteration = None
