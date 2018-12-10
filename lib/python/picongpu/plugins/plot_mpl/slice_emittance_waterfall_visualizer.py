@@ -53,8 +53,8 @@ class Visualizer(BaseVisualizer):
                                  norm=LogNorm(), origin="lower",
                                  vmin=1e-1, vmax=1e2,
                                  extent=(0, max(y_slices*1.e6), 0, max_iter))
-        if self.iteration:
-            self.plt_lin = ax.axhline(self.iteration * dt * ps,
+        if self.cur_iteration:
+            self.plt_lin = ax.axhline(self.cur_iteration * dt * ps,
                                       color='#FF6600')
         self.cbar = plt.colorbar(self.plt_obj, ax=ax)
         self.cbar.set_label(r'emittance [$\mathrm{\pi mm mrad}$]')
@@ -74,8 +74,8 @@ class Visualizer(BaseVisualizer):
         if self.plt_lin:
             self.plt_lin.remove()
         ps = 1.e12  # for conversion from s to ps
-        if self.iteration:
-            self.plt_lin = self.ax.axhline(self.iteration * dt * ps,
+        if self.cur_iteration:
+            self.plt_lin = self.ax.axhline(self.cur_iteration * dt * ps,
                                            color='#FF6600')
         self.cbar.update_normal(self.plt_obj)
 
@@ -102,7 +102,7 @@ class Visualizer(BaseVisualizer):
 
         """
         self.ax = self._ax_or_gca(ax)
-        self.iteration = kwargs.get('iteration')
+        self.cur_iteration = kwargs.get('iteration')
         kwargs['iteration'] = None
         super(Visualizer, self).visualize(ax, **kwargs)
         species = kwargs.get('species')
@@ -156,8 +156,8 @@ if __name__ == '__main__':
                 filtr = arg
 
         # check that we got all args that we need
-        if path is None or iteration is None:
-            print("Path to 'run' directory and iteration have to be provided!")
+        if path is None:
+            print("Path to 'run' directory have to be provided!")
             usage()
             sys.exit(2)
         if species is None:

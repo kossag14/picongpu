@@ -49,8 +49,8 @@ class Visualizer(BaseVisualizer):
         self.plt_obj = ax.imshow(np_data, aspect="auto",
                                  norm=LogNorm(), origin="lower",
                                  extent=(0, max_iter, 0, max(bins*1.e-3)))
-        if self.iteration:
-            self.plt_lin = ax.axvline(self.iteration * dt * ps,
+        if self.cur_iteration:
+            self.plt_lin = ax.axvline(self.cur_iteration * dt * ps,
                                       color='#FF6600')
         self.cbar = plt.colorbar(self.plt_obj, ax=self.ax)
         self.cbar.set_label(r'Count')
@@ -68,8 +68,8 @@ class Visualizer(BaseVisualizer):
         self.plt_obj.set_data(np_data)
         self.plt_lin.remove()
         ps = 1.e12  # for conversion from s to ps
-        if self.iteration:
-            self.plt_lin = self.ax.axvline(self.iteration * dt * ps,
+        if self.cur_iteration:
+            self.plt_lin = self.ax.axvline(self.cur_iteration * dt * ps,
                                            color='#FF6600')
         self.plt_obj.autoscale()
         self.ax.relim()
@@ -99,7 +99,7 @@ class Visualizer(BaseVisualizer):
 
         """
         self.ax = self._ax_or_gca(ax)
-        self.iteration = kwargs.get('iteration')
+        self.cur_iteration = kwargs.get('iteration')
         kwargs['iteration'] = None
         # this already throws error if no species or iteration in kwargs
         super(Visualizer, self).visualize(ax, **kwargs)
@@ -154,8 +154,8 @@ if __name__ == '__main__':
                 filtr = arg
 
         # check that we got all args that we need
-        if path is None or iteration is None:
-            print("Path to 'run' directory and iteration have to be provided!")
+        if path is None:
+            print("Path to 'run' directory have to be provided!")
             usage()
             sys.exit(2)
         if species is None:

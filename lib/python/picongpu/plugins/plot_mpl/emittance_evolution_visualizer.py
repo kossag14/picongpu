@@ -64,8 +64,8 @@ class Visualizer(BaseVisualizer):
         ps = 1.e12  # for conversion from s to ps
         # np_data * 1.e6 converts emittance to pi mm mrad
         self.plt_obj.set_data(all_iterations * dt * ps, np_data * 1.e6)
-        if self.iteration:
-            self.plt_lin = self.ax.axvline(self.iteration * dt * ps,
+        if self.cur_iteration:
+            self.plt_lin = self.ax.axvline(self.cur_iteration * dt * ps,
                                            color='#FF6600')
         self.ax.relim()
         self.ax.autoscale_view(True, True, True)
@@ -93,7 +93,7 @@ class Visualizer(BaseVisualizer):
 
         """
         self.ax = self._ax_or_gca(ax)
-        self.itera = kwargs.get('iteration')
+        self.cur_iteration = kwargs.get('iteration')
         # this already throws error if no species or iteration in kwargs
         kwargs['iteration'] = None
         super(Visualizer, self).visualize(ax, **kwargs)
@@ -145,8 +145,8 @@ if __name__ == '__main__':
                 filtr = arg
 
         # check that we got all args that we need
-        if path is None or iteration is None:
-            print("Path to 'run' directory and iteration have to be provided!")
+        if path is None:
+            print("Path to 'run' directory have to be provided!")
             usage()
             sys.exit(2)
         if species is None:
