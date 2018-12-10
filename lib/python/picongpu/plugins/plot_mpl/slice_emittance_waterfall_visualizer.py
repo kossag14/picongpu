@@ -34,7 +34,7 @@ class Visualizer(BaseVisualizer):
         """
         Implementation of base class function.
         """
-        return Emittance(run_directory)
+        return EmittanceData(run_directory)
 
     def _create_plt_obj(self, ax):
         """

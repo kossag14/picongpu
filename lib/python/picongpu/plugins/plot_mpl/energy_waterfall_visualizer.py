@@ -33,7 +33,7 @@ class Visualizer(BaseVisualizer):
         """
         Implementation of base class function.
         """
-        return EnergyHistogram(run_directory)
+        return EnergyHistogramData(run_directory)
 
     def _create_plt_obj(self, ax):
         """
