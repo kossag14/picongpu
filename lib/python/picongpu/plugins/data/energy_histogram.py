@@ -13,6 +13,7 @@ import os
 import collections
 from picongpu.utils.find_time import FindTime
 
+
 class EnergyHistogramData(DataReader):
     """
     Data Reader for the Energy Histogram Plugin.
