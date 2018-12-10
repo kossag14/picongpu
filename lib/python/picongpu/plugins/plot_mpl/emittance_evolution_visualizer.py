@@ -39,23 +39,23 @@ class Visualizer(BaseVisualizer):
         Implementation of base class function.
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
-        emit, y_slices, all_iterations = self.data
+        emit, y_slices, all_iterations, dt = self.data
         np_data = np.zeros(len(all_iterations))
         for index, ts in enumerate(all_iterations):
             np_data[index] = emit[ts][0]
         ps = 1.e12  # for conversion from s to ps
         # np_data * 1.e6 converts emittance to pi mm mrad
-        self.plt_obj, = ax.plot(all_iterations * 1.39e-16 * ps,
+        self.plt_obj, = ax.plot(all_iterations * dt * ps,
                                 np_data * 1.e6, scalex=True, scaley=True)
         if self.iteration:
-            self.plt_lin = ax.axvline(self.iteration * 1.39e-16 * ps,
+            self.plt_lin = ax.axvline(self.iteration * dt * ps,
                                       color='#FF6600')
 
     def _update_plt_obj(self):
         """
         Implementation of base class function.
         """
-        emit, y_slices, all_iterations = self.data
+        emit, y_slices, all_iterations, dt = self.data
         np_data = np.zeros(len(all_iterations))
         for index, ts in enumerate(all_iterations):
             np_data[index] = emit[ts][0]
@@ -63,9 +63,9 @@ class Visualizer(BaseVisualizer):
             self.plt_lin.remove()
         ps = 1.e12  # for conversion from s to ps
         # np_data * 1.e6 converts emittance to pi mm mrad
-        self.plt_obj.set_data(all_iterations * 1.39e-16 * ps, np_data * 1.e6)
+        self.plt_obj.set_data(all_iterations * dt * ps, np_data * 1.e6)
         if self.iteration:
-            self.plt_lin = self.ax.axvline(self.iteration * 1.39e-16 * ps,
+            self.plt_lin = self.ax.axvline(self.iteration * dt * ps,
                                            color='#FF6600')
         self.ax.relim()
         self.ax.autoscale_view(True, True, True)

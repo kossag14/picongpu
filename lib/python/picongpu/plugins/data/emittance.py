@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import os
 import collections
-
+from picongpu.utils.find_time import FindTime
 
 class EmittanceData(object):
     """
@@ -171,11 +171,11 @@ class EmittanceData(object):
             raise IndexError('Iteration {} is not available!\n'
                              'List of available iterations: \n'
                              '{}'.format(iteration, data.index.values))
-
+        dt = FindTime(self.run_directory).get_dt()
         if len(iteration) > 1:
             return collections.OrderedDict(zip(
                     iteration,
                     data.loc[iteration].values
-                )), y_slices, iteration
+                )), y_slices, iteration, dt
         else:
-            return data.loc[iteration].values[0, :], y_slices, iteration
+            return (data.loc[iteration].values[0, :], y_slices)

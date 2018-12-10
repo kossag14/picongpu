@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import os
 import collections
-
+from picongpu.utils.find_time import FindTime
 
 class EnergyHistogramData(DataReader):
     """
@@ -173,8 +173,8 @@ class EnergyHistogramData(DataReader):
         if not include_overflow:
             del data['underflow']
             del data['overflow']
-
+        dt = FindTime(self.run_directory).get_dt()
         if len(iteration) > 1:
-            return data.loc[iteration].values, bins
+            return data.loc[iteration].values, bins, iteration, dt
         else:
             return data.loc[iteration].values[0, :], bins

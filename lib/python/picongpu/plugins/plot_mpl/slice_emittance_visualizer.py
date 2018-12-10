@@ -38,7 +38,7 @@ class Visualizer(BaseVisualizer):
         Implementation of base class function.
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
-        slice_emit, y_slices, iteration = self.data
+        slice_emit, y_slices = self.data
         # slice_emit * 1.e6 converts emittance to pi mm mrad,
         # y_slices*1.e6 converts positon of y slice to micrometer
         self.plt_obj = ax.plot(y_slices*1.e6, slice_emit[1:]*1.e6,
@@ -48,7 +48,7 @@ class Visualizer(BaseVisualizer):
         """
         Implementation of base class function.
         """
-        slice_emit, y_slices, iteration = self.data
+        slice_emit, y_slices = self.data
         ax = self._ax_or_gca(None)
         # slice_emit * 1.e6 converts emittance to pi mm mrad
         # y_slices*1.e6 converts positon of y slice to micrometer

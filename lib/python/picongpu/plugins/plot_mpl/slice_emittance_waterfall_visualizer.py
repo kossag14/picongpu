@@ -41,12 +41,12 @@ class Visualizer(BaseVisualizer):
         Implementation of base class function.
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
-        slice_emit, y_slices, all_iterations = self.data
+        slice_emit, y_slices, all_iterations, dt = self.data
         np_data = np.zeros((len(y_slices), len(all_iterations)))
         for index, ts in enumerate(all_iterations):
             np_data[:, index] = slice_emit[ts][1:]
         ps = 1.e12  # for conversion from s to ps
-        max_iter = max(all_iterations * 1.39e-16 * ps)
+        max_iter = max(all_iterations * dt * ps)
         # np_data.T * 1.e6 converts emittance to pi mm mrad,
         # y_slices * 1.e6 converts y slice position to micrometer
         self.plt_obj = ax.imshow(np_data.T * 1.e6, aspect="auto",
@@ -54,7 +54,7 @@ class Visualizer(BaseVisualizer):
                                  vmin=1e-1, vmax=1e2,
                                  extent=(0, max(y_slices*1.e6), 0, max_iter))
         if self.iteration:
-            self.plt_lin = ax.axhline(self.iteration * 1.39e-16 * ps,
+            self.plt_lin = ax.axhline(self.iteration * dt * ps,
                                       color='#FF6600')
         self.cbar = plt.colorbar(self.plt_obj, ax=ax)
         self.cbar.set_label(r'emittance [$\mathrm{\pi mm mrad}$]')
@@ -65,16 +65,17 @@ class Visualizer(BaseVisualizer):
         """
         Implementation of base class function.
         """
-        slice_emit, y_slices, all_iterations = self.data
+        slice_emit, y_slices, all_iterations, dt = self.data
         np_data = np.zeros((len(y_slices), len(all_iterations)))
         for index, ts in enumerate(all_iterations):
             np_data[:, index] = slice_emit[ts][1:]
+        # np_data.T*1.e6 for conversion of emittance to pi mm mrad
         self.plt_obj.set_data(np_data.T*1.e6)
         if self.plt_lin:
             self.plt_lin.remove()
         ps = 1.e12  # for conversion from s to ps
         if self.iteration:
-            self.plt_lin = self.ax.axhline(self.iteration * 1.39e-16 * ps,
+            self.plt_lin = self.ax.axhline(self.iteration * dt * ps,
                                            color='#FF6600')
         self.cbar.update_normal(self.plt_obj)
 

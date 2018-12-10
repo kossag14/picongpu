@@ -40,17 +40,17 @@ class Visualizer(BaseVisualizer):
         Implementation of base class function.
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
-        counts, bins, all_iterations = self.data
+        counts, bins, all_iterations, dt = self.data
         np_data = np.zeros((len(bins), len(all_iterations)))
         for index, ts in enumerate(all_iterations):
             np_data[:, index] = counts[ts]
-        max_iter = max(all_iterations * 1.39e-16 * 1.e12)
+        ps = 1.e12  # for conversion from s to ps
+        max_iter = max(all_iterations * dt * ps)
         self.plt_obj = ax.imshow(np_data, aspect="auto",
                                  norm=LogNorm(), origin="lower",
                                  extent=(0, max_iter, 0, max(bins*1.e-3)))
-        ps = 1.e12  # for conversion from s to ps
         if self.iteration:
-            self.plt_lin = ax.axvline(self.iteration * 1.39e-16 * ps,
+            self.plt_lin = ax.axvline(self.iteration * dt * ps,
                                       color='#FF6600')
         self.cbar = plt.colorbar(self.plt_obj, ax=self.ax)
         self.cbar.set_label(r'Count')
@@ -61,7 +61,7 @@ class Visualizer(BaseVisualizer):
         """
         Implementation of base class function.
         """
-        counts, bins, all_iterations = self.data
+        counts, bins, all_iterations, dt = self.data
         np_data = np.zeros((len(bins), len(all_iterations)))
         for index, ts in enumerate(all_iterations):
             np_data[:, index] = counts[ts]
@@ -69,7 +69,7 @@ class Visualizer(BaseVisualizer):
         self.plt_lin.remove()
         ps = 1.e12  # for conversion from s to ps
         if self.iteration:
-            self.plt_lin = self.ax.axvline(self.iteration * 1.39e-16 * ps,
+            self.plt_lin = self.ax.axvline(self.iteration * dt * ps,
                                            color='#FF6600')
         self.plt_obj.autoscale()
         self.ax.relim()
