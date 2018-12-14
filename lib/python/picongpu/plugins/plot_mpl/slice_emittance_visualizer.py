@@ -8,15 +8,14 @@ License: GPLv3+
 
 from picongpu.plugins.data import EmittanceData
 from picongpu.plugins.plot_mpl.base_visualizer import Visualizer as\
-    BaseVisualizer, plt
-
+    BaseVisualizer
 
 class Visualizer(BaseVisualizer):
     """
     Class to plot the slice emittance value for each y_slice (x-axis).
     """
 
-    def __init__(self, run_directory):
+    def __init__(self, run_directories=None, ax=None):
         """
         Parameters
         ----------
@@ -24,37 +23,32 @@ class Visualizer(BaseVisualizer):
             path to the run directory of PIConGPU
             (the path before ``simOutput/``)
         """
-        super(Visualizer, self).__init__(run_directory)
+        super().__init__(EmittanceData, run_directories, ax)
         self.cbar = None
 
-    def _create_data_reader(self, run_directory):
-        """
-        Implementation of base class function.
-        """
-        return EmittanceData(run_directory)
-
-    def _create_plt_obj(self, ax):
+    def _create_plt_obj(self, idx):
         """
         Implementation of base class function.
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
-        slice_emit, y_slices = self.data
+        slice_emit, y_slices = self.data[idx]
+        label = self.sim_labels[idx]
         # slice_emit * 1.e6 converts emittance to pi mm mrad,
         # y_slices*1.e6 converts positon of y slice to micrometer
-        self.plt_obj = ax.plot(y_slices*1.e6, slice_emit[1:]*1.e6,
-                               scalex=True, scaley=True)[0]
+        self.plt_obj[idx] = self.ax.plot(y_slices*1.e6, slice_emit[1:]*1.e6,
+                               scalex=True, scaley=True,
+                               color=self.colors[idx])[0]
 
-    def _update_plt_obj(self):
+    def _update_plt_obj(self, idx):
         """
         Implementation of base class function.
         """
-        slice_emit, y_slices = self.data
-        ax = self._ax_or_gca(None)
+        slice_emit, y_slices = self.data[idx]
         # slice_emit * 1.e6 converts emittance to pi mm mrad
         # y_slices*1.e6 converts positon of y slice to micrometer
-        self.plt_obj.set_data(y_slices*1.e6, slice_emit[1:]*1.e6)
-        ax.relim()
-        ax.autoscale_view(True, True, True)
+        self.plt_obj[idx].set_data(y_slices*1.e6, slice_emit[1:]*1.e6)
+        self.ax.relim()
+        self.ax.autoscale_view(True, True, True)
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -78,20 +72,31 @@ class Visualizer(BaseVisualizer):
                 (defined in ``particleFilters.param``)
 
         """
-        self.ax = self._ax_or_gca(ax)
-        self.iteration = kwargs.get('iteration')
-        super(Visualizer, self).visualize(ax, **kwargs)
-        species = kwargs.get('species')
+        super().visualize(**kwargs)
+
+    def adjust_plot(self, **kwargs):
+        species = kwargs['species']
         species_filter = kwargs.get('species_filter', 'all')
-        if self.iteration is None or species is None:
-            raise ValueError("Iteration and species have to be provided as\
-            keyword arguments!")
-        ax.set_xlabel(r'y-slice [$\mathrm{\mu m}$]')
-        ax.set_ylabel(r'emittance [$\mathrm{\pi mm mrad}$]')
-        ax.set_title('slice emittance for species ' +
+        self._legend()
+        self.ax.relim()
+        self.ax.autoscale_view(True, True, True)
+        self.ax.set_xlabel(r'y-slice [$\mathrm{\mu m}$]')
+        self.ax.set_ylabel(r'emittance [$\mathrm{\pi mm mrad}$]')
+        self.ax.set_title('slice emittance for species ' +
                      species + ', filter = ' + species_filter)
 
+    def _legend(self):
+        # draw the legend only for those lines for which there is data.
+        # colors will not change in between simulations since they are
+        # tied to the data readers index directly.
+        handles = []
+        labels = []
+        for plt_obj, lab in zip(self.plt_obj, self.sim_labels):
+            if plt_obj is not None:
+                handles.append(plt_obj)
+                labels.append(lab)
 
+        self.ax.legend(handles, labels)
 if __name__ == '__main__':
 
     def main():

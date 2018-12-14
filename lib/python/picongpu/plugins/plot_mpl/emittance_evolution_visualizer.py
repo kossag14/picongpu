@@ -8,7 +8,7 @@ License: GPLv3+
 
 from picongpu.plugins.data import EmittanceData
 from picongpu.plugins.plot_mpl.base_visualizer import Visualizer as\
-    BaseVisualizer, plt
+    BaseVisualizer
 import numpy as np
 
 
@@ -17,7 +17,7 @@ class Visualizer(BaseVisualizer):
     Class for creation of histogram plots on a logscaled y-axis.
     """
 
-    def __init__(self, run_directory):
+    def __init__(self, run_directories=None, ax=None):
         """
         Parameters
         ----------
@@ -25,37 +25,32 @@ class Visualizer(BaseVisualizer):
             path to the run directory of PIConGPU
             (the path before ``simOutput/``)
         """
-        super(Visualizer, self).__init__(run_directory)
-        self.cbar = None
+        super().__init__(EmittanceData, run_directories, ax)
 
-    def _create_data_reader(self, run_directory):
-        """
-        Implementation of base class function.
-        """
-        return EmittanceData(run_directory)
-
-    def _create_plt_obj(self, ax):
+    def _create_plt_obj(self, idx):
         """
         Implementation of base class function.
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
-        emit, y_slices, all_iterations, dt = self.data
+        emit, y_slices, all_iterations, dt = self.data[idx]
+        label = self.sim_labels[idx]
         np_data = np.zeros(len(all_iterations))
         for index, ts in enumerate(all_iterations):
             np_data[index] = emit[ts][0]
         ps = 1.e12  # for conversion from s to ps
         # np_data * 1.e6 converts emittance to pi mm mrad
-        self.plt_obj, = ax.plot(all_iterations * dt * ps,
-                                np_data * 1.e6, scalex=True, scaley=True)
-        if self.iteration:
-            self.plt_lin = ax.axvline(self.iteration * dt * ps,
+        self.plt_obj[idx], = self.ax.plot(all_iterations * dt * ps,
+                                np_data * 1.e6, scalex=True, scaley=True,
+                                color=self.colors[idx])
+        if self.cur_iteration:
+            self.plt_lin = self.ax.axvline(self.cur_iteration * dt * ps,
                                       color='#FF6600')
 
-    def _update_plt_obj(self):
+    def _update_plt_obj(self, idx):
         """
         Implementation of base class function.
         """
-        emit, y_slices, all_iterations, dt = self.data
+        emit, y_slices, all_iterations, dt = self.data[idx]
         np_data = np.zeros(len(all_iterations))
         for index, ts in enumerate(all_iterations):
             np_data[index] = emit[ts][0]
@@ -63,7 +58,7 @@ class Visualizer(BaseVisualizer):
             self.plt_lin.remove()
         ps = 1.e12  # for conversion from s to ps
         # np_data * 1.e6 converts emittance to pi mm mrad
-        self.plt_obj.set_data(all_iterations * dt * ps, np_data * 1.e6)
+        self.plt_obj[idx].set_data(all_iterations * dt * ps, np_data * 1.e6)
         if self.cur_iteration:
             self.plt_lin = self.ax.axvline(self.cur_iteration * dt * ps,
                                            color='#FF6600')
@@ -92,18 +87,34 @@ class Visualizer(BaseVisualizer):
                 (defined in ``particleFilters.param``)
 
         """
-        self.ax = self._ax_or_gca(ax)
         self.cur_iteration = kwargs.get('iteration')
         # this already throws error if no species or iteration in kwargs
         kwargs['iteration'] = None
-        super(Visualizer, self).visualize(ax, **kwargs)
-        species = kwargs.get('species')
+        super().visualize(**kwargs)
+
+    def adjust_plot(self, **kwargs):
+        species = kwargs['species']
         species_filter = kwargs.get('species_filter', 'all')
-        ax.set_xlabel('time [ps]')
-        ax.set_ylabel(r'emittance [$\mathrm{\pi mm mrad}$]')
-        ax.set_title('emittance for species ' +
+        self._legend()
+        self.ax.relim()
+        self.ax.autoscale_view(True, True, True)
+        self.ax.set_xlabel('time [ps]')
+        self.ax.set_ylabel(r'emittance [$\mathrm{\pi mm mrad}$]')
+        self.ax.set_title('emittance for species ' +
                      species + ', filter = ' + species_filter)
 
+    def _legend(self):
+        # draw the legend only for those lines for which there is data.
+        # colors will not change in between simulations since they are
+        # tied to the data readers index directly.
+        handles = []
+        labels = []
+        for plt_obj, lab in zip(self.plt_obj, self.sim_labels):
+            if plt_obj is not None:
+                handles.append(plt_obj)
+                labels.append(lab)
+
+        self.ax.legend(handles, labels)
 
 if __name__ == '__main__':
 

@@ -8,9 +8,10 @@ License: GPLv3+
 
 from picongpu.plugins.data import EmittanceData
 from picongpu.plugins.plot_mpl.base_visualizer import Visualizer as\
-    BaseVisualizer, plt
+    BaseVisualizer
 import numpy as np
 from matplotlib.colors import LogNorm
+import matplotlib.pyplot as plt
 
 
 class Visualizer(BaseVisualizer):
@@ -19,7 +20,7 @@ class Visualizer(BaseVisualizer):
     for each y_slice (x-axis) and iteration (y-axis).
     """
 
-    def __init__(self, run_directory):
+    def __init__(self, run_directories=None, ax=None):
         """
         Parameters
         ----------
@@ -27,21 +28,15 @@ class Visualizer(BaseVisualizer):
             path to the run directory of PIConGPU
             (the path before ``simOutput/``)
         """
-        super(Visualizer, self).__init__(run_directory)
+        super().__init__(EmittanceData, run_directories, ax)
         self.cbar = None
 
-    def _create_data_reader(self, run_directory):
-        """
-        Implementation of base class function.
-        """
-        return EmittanceData(run_directory)
-
-    def _create_plt_obj(self, ax):
+    def _create_plt_obj(self, idx):
         """
         Implementation of base class function.
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
-        slice_emit, y_slices, all_iterations, dt = self.data
+        slice_emit, y_slices, all_iterations, dt = self.data[idx]
         np_data = np.zeros((len(y_slices), len(all_iterations)))
         for index, ts in enumerate(all_iterations):
             np_data[:, index] = slice_emit[ts][1:]
@@ -49,35 +44,34 @@ class Visualizer(BaseVisualizer):
         max_iter = max(all_iterations * dt * ps)
         # np_data.T * 1.e6 converts emittance to pi mm mrad,
         # y_slices * 1.e6 converts y slice position to micrometer
-        self.plt_obj = ax.imshow(np_data.T * 1.e6, aspect="auto",
+        self.plt_obj[idx] = self.ax.imshow(np_data.T * 1.e6, aspect="auto",
                                  norm=LogNorm(), origin="lower",
                                  vmin=1e-1, vmax=1e2,
-                                 extent=(0, max(y_slices*1.e6), 0, max_iter))
+                                 extent=(0, max(y_slices*1.e6),
+                                         0, max_iter))
         if self.cur_iteration:
-            self.plt_lin = ax.axhline(self.cur_iteration * dt * ps,
+            self.plt_lin = self.ax.axhline(self.cur_iteration * dt * ps,
                                       color='#FF6600')
-        self.cbar = plt.colorbar(self.plt_obj, ax=ax)
+        self.cbar = plt.colorbar(self.plt_obj[idx], ax=self.ax)
         self.cbar.set_label(r'emittance [$\mathrm{\pi mm mrad}$]')
-        ax.set_xlabel(r'y-slice [$\mathrm{\mu m}$]')
-        ax.set_ylabel('time [ps]')
 
-    def _update_plt_obj(self):
+    def _update_plt_obj(self, idx):
         """
         Implementation of base class function.
         """
-        slice_emit, y_slices, all_iterations, dt = self.data
+        slice_emit, y_slices, all_iterations, dt = self.data[idx]
         np_data = np.zeros((len(y_slices), len(all_iterations)))
         for index, ts in enumerate(all_iterations):
             np_data[:, index] = slice_emit[ts][1:]
         # np_data.T*1.e6 for conversion of emittance to pi mm mrad
-        self.plt_obj.set_data(np_data.T*1.e6)
+        self.plt_obj[idx].set_data(np_data.T*1.e6)
         if self.plt_lin:
             self.plt_lin.remove()
         ps = 1.e12  # for conversion from s to ps
         if self.cur_iteration:
             self.plt_lin = self.ax.axhline(self.cur_iteration * dt * ps,
                                            color='#FF6600')
-        self.cbar.update_normal(self.plt_obj)
+        self.cbar.update_normal(self.plt_obj[idx])
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -101,13 +95,17 @@ class Visualizer(BaseVisualizer):
                 (defined in ``particleFilters.param``)
 
         """
-        self.ax = self._ax_or_gca(ax)
         self.cur_iteration = kwargs.get('iteration')
         kwargs['iteration'] = None
-        super(Visualizer, self).visualize(ax, **kwargs)
-        species = kwargs.get('species')
+        super().visualize(**kwargs)
+
+    def adjust_plot(self, **kwargs):
+        species = kwargs['species']
         species_filter = kwargs.get('species_filter', 'all')
-        ax.set_title('slice emittance for species ' +
+
+        self.ax.set_xlabel(r'y-slice [$\mathrm{\mu m}$]')
+        self.ax.set_ylabel('time [ps]')
+        self.ax.set_title('slice emittance for species ' +
                      species + ', filter = ' + species_filter)
 
     def clear_cbar(self):

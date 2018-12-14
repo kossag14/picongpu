@@ -5,6 +5,7 @@ Copyright 2017-2018 PIConGPU contributors
 Authors: Sophie Rudat, Axel Huebl
 License: GPLv3+
 """
+from .base_reader import DataReader
 
 import numpy as np
 import pandas as pd
@@ -13,7 +14,8 @@ import collections
 from picongpu.utils.find_time import FindTime
 
 
-class EmittanceData(object):
+
+class EmittanceData(DataReader):
     """
     Data Reader for the emittance plugin
     """
@@ -26,10 +28,8 @@ class EmittanceData(object):
             path to the run directory of PIConGPU
             (the path before ``simOutput/``)
         """
-        if run_directory is None:
-            raise ValueError('The run_directory parameter can not be None!')
+        super().__init__(run_directory)
 
-        self.run_directory = run_directory
         self.data_file_prefix = "_emittance_"
         self.data_file_suffix = ".dat"
 
@@ -100,8 +100,8 @@ class EmittanceData(object):
                            delimiter=" ",
                            dtype=np.uint64).values[:, 0]
 
-    def get(self, species, species_filter="all", iteration=None,
-            include_overflow=False, **kwargs):
+    def _get_for_iteration(self, iteration, species,
+                           species_filter="all", **kwargs):
         """
         Get a histogram.
 

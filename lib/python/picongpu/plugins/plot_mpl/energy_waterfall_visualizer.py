@@ -8,9 +8,10 @@ License: GPLv3+
 
 from picongpu.plugins.data import EnergyHistogramData
 from picongpu.plugins.plot_mpl.base_visualizer import Visualizer as\
-    BaseVisualizer, plt
+    BaseVisualizer
 import numpy as np
 from matplotlib.colors import LogNorm
+import matplotlib.pyplot as plt
 
 
 class Visualizer(BaseVisualizer):
@@ -18,7 +19,7 @@ class Visualizer(BaseVisualizer):
     Class for creation of histogram plots on a logscaled y-axis.
     """
 
-    def __init__(self, run_directory):
+    def __init__(self, run_directories=None, ax=None):
         """
         Parameters
         ----------
@@ -26,55 +27,44 @@ class Visualizer(BaseVisualizer):
             path to the run directory of PIConGPU
             (the path before ``simOutput/``)
         """
-        super(Visualizer, self).__init__(run_directory)
+        super().__init__(EnergyHistogramData, run_directories, ax)
         self.cbar = None
 
-    def _create_data_reader(self, run_directory):
-        """
-        Implementation of base class function.
-        """
-        return EnergyHistogramData(run_directory)
-
-    def _create_plt_obj(self, ax):
+    def _create_plt_obj(self, idx):
         """
         Implementation of base class function.
         Turns 'self.plt_obj' into a matplotlib.pyplot.plot object.
         """
-        counts, bins, all_iterations, dt = self.data
+        counts, bins, all_iterations, dt = self.data[idx]
         np_data = np.zeros((len(bins), len(all_iterations)))
         for index, ts in enumerate(all_iterations):
-            np_data[:, index] = counts[ts]
+            np_data[:, index] = counts[index]
         ps = 1.e12  # for conversion from s to ps
         max_iter = max(all_iterations * dt * ps)
-        self.plt_obj = ax.imshow(np_data, aspect="auto",
+        self.plt_obj[idx] = self.ax.imshow(np_data, aspect="auto",
                                  norm=LogNorm(), origin="lower",
                                  extent=(0, max_iter, 0, max(bins*1.e-3)))
         if self.cur_iteration:
-            self.plt_lin = ax.axvline(self.cur_iteration * dt * ps,
+            self.plt_lin = self.ax.axvline(self.cur_iteration * dt * ps,
                                       color='#FF6600')
-        self.cbar = plt.colorbar(self.plt_obj, ax=self.ax)
+        self.cbar = plt.colorbar(self.plt_obj[idx], ax=self.ax)
         self.cbar.set_label(r'Count')
-        ax.set_xlabel('time [ps]')
-        ax.set_ylabel('Energy [MeV]')
 
-    def _update_plt_obj(self):
+    def _update_plt_obj(self, idx):
         """
         Implementation of base class function.
         """
-        counts, bins, all_iterations, dt = self.data
+        counts, bins, all_iterations, dt = self.data[idx]
         np_data = np.zeros((len(bins), len(all_iterations)))
         for index, ts in enumerate(all_iterations):
-            np_data[:, index] = counts[ts]
-        self.plt_obj.set_data(np_data)
+            np_data[:, index] = counts[index]
+        self.plt_obj[idx].set_data(np_data)
         self.plt_lin.remove()
         ps = 1.e12  # for conversion from s to ps
         if self.cur_iteration:
             self.plt_lin = self.ax.axvline(self.cur_iteration * dt * ps,
                                            color='#FF6600')
-        self.plt_obj.autoscale()
-        self.ax.relim()
-        self.ax.autoscale_view(True, True, True)
-        self.cbar.update_normal(self.plt_obj)
+        self.cbar.update_normal(self.plt_obj[idx])
 
     def visualize(self, ax=None, **kwargs):
         """
@@ -98,15 +88,19 @@ class Visualizer(BaseVisualizer):
                 (defined in ``particleFilters.param``)
 
         """
-        self.ax = self._ax_or_gca(ax)
         self.cur_iteration = kwargs.get('iteration')
         kwargs['iteration'] = None
         # this already throws error if no species or iteration in kwargs
-        super(Visualizer, self).visualize(ax, **kwargs)
-        species = kwargs.get('species')
+        super().visualize(**kwargs)
+
+    def adjust_plot(self, **kwargs):
+        species = kwargs['species']
         species_filter = kwargs.get('species_filter', 'all')
-        ax.set_title('Energy Histogram for species ' +
-                     species + ', filter = ' + species_filter)
+
+        self.ax.set_xlabel('time [ps]')
+        self.ax.set_ylabel('Energy [MeV]')
+        self.ax.set_title('Energy Histogram for species ' +
+                          species + ', filter = ' + species_filter)
 
     def clear_cbar(self):
         """Clear colorbar if present."""
