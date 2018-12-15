@@ -10,6 +10,7 @@ from picongpu.plugins.data import EmittanceData
 from picongpu.plugins.plot_mpl.base_visualizer import Visualizer as\
     BaseVisualizer
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class Visualizer(BaseVisualizer):
@@ -40,11 +41,12 @@ class Visualizer(BaseVisualizer):
         ps = 1.e12  # for conversion from s to ps
         # np_data * 1.e6 converts emittance to pi mm mrad
         self.plt_obj[idx], = self.ax.plot(all_iterations * dt * ps,
-                                np_data * 1.e6, scalex=True, scaley=True,
-                                color=self.colors[idx])
+                                          np_data * 1.e6, scalex=True,
+                                          scaley=True, label=label,
+                                          color=self.colors[idx])
         if self.cur_iteration:
             self.plt_lin = self.ax.axvline(self.cur_iteration * dt * ps,
-                                      color='#FF6600')
+                                           color='#FF6600')
 
     def _update_plt_obj(self, idx):
         """
@@ -101,7 +103,7 @@ class Visualizer(BaseVisualizer):
         self.ax.set_xlabel('time [ps]')
         self.ax.set_ylabel(r'emittance [$\mathrm{\pi mm mrad}$]')
         self.ax.set_title('emittance for species ' +
-                     species + ', filter = ' + species_filter)
+                          species + ', filter = ' + species_filter)
 
     def _legend(self):
         # draw the legend only for those lines for which there is data.
@@ -113,8 +115,8 @@ class Visualizer(BaseVisualizer):
             if plt_obj is not None:
                 handles.append(plt_obj)
                 labels.append(lab)
-
         self.ax.legend(handles, labels)
+
 
 if __name__ == '__main__':
 

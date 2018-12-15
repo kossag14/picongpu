@@ -45,13 +45,13 @@ class Visualizer(BaseVisualizer):
         # np_data.T * 1.e6 converts emittance to pi mm mrad,
         # y_slices * 1.e6 converts y slice position to micrometer
         self.plt_obj[idx] = self.ax.imshow(np_data.T * 1.e6, aspect="auto",
-                                 norm=LogNorm(), origin="lower",
-                                 vmin=1e-1, vmax=1e2,
-                                 extent=(0, max(y_slices*1.e6),
-                                         0, max_iter))
+                                           norm=LogNorm(), origin="lower",
+                                           vmin=1e-1, vmax=1e2,
+                                           extent=(0, max(y_slices*1.e6),
+                                                   0, max_iter))
         if self.cur_iteration:
             self.plt_lin = self.ax.axhline(self.cur_iteration * dt * ps,
-                                      color='#FF6600')
+                                           color='#FF6600')
         self.cbar = plt.colorbar(self.plt_obj[idx], ax=self.ax)
         self.cbar.set_label(r'emittance [$\mathrm{\pi mm mrad}$]')
 
@@ -106,7 +106,7 @@ class Visualizer(BaseVisualizer):
         self.ax.set_xlabel(r'y-slice [$\mathrm{\mu m}$]')
         self.ax.set_ylabel('time [ps]')
         self.ax.set_title('slice emittance for species ' +
-                     species + ', filter = ' + species_filter)
+                          species + ', filter = ' + species_filter)
 
     def clear_cbar(self):
         """Clear colorbar if present."""

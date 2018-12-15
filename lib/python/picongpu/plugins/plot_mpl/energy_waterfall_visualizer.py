@@ -42,11 +42,13 @@ class Visualizer(BaseVisualizer):
         ps = 1.e12  # for conversion from s to ps
         max_iter = max(all_iterations * dt * ps)
         self.plt_obj[idx] = self.ax.imshow(np_data, aspect="auto",
-                                 norm=LogNorm(), origin="lower",
-                                 extent=(0, max_iter, 0, max(bins*1.e-3)))
+                                           norm=LogNorm(),
+                                           origin="lower",
+                                           extent=(0, max_iter,
+                                                   0, max(bins*1.e-3)))
         if self.cur_iteration:
             self.plt_lin = self.ax.axvline(self.cur_iteration * dt * ps,
-                                      color='#FF6600')
+                                           color='#FF6600')
         self.cbar = plt.colorbar(self.plt_obj[idx], ax=self.ax)
         self.cbar.set_label(r'Count')
 

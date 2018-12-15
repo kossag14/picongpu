@@ -14,7 +14,6 @@ import collections
 from picongpu.utils.find_time import FindTime
 
 
-
 class EmittanceData(DataReader):
     """
     Data Reader for the emittance plugin

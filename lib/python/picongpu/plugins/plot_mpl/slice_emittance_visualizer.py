@@ -9,6 +9,8 @@ License: GPLv3+
 from picongpu.plugins.data import EmittanceData
 from picongpu.plugins.plot_mpl.base_visualizer import Visualizer as\
     BaseVisualizer
+import matplotlib.pyplot as plt
+
 
 class Visualizer(BaseVisualizer):
     """
@@ -36,8 +38,9 @@ class Visualizer(BaseVisualizer):
         # slice_emit * 1.e6 converts emittance to pi mm mrad,
         # y_slices*1.e6 converts positon of y slice to micrometer
         self.plt_obj[idx] = self.ax.plot(y_slices*1.e6, slice_emit[1:]*1.e6,
-                               scalex=True, scaley=True,
-                               color=self.colors[idx])[0]
+                                         scalex=True, scaley=True,
+                                         color=self.colors[idx],
+                                         label=label)[0]
 
     def _update_plt_obj(self, idx):
         """
@@ -83,7 +86,7 @@ class Visualizer(BaseVisualizer):
         self.ax.set_xlabel(r'y-slice [$\mathrm{\mu m}$]')
         self.ax.set_ylabel(r'emittance [$\mathrm{\pi mm mrad}$]')
         self.ax.set_title('slice emittance for species ' +
-                     species + ', filter = ' + species_filter)
+                          species + ', filter = ' + species_filter)
 
     def _legend(self):
         # draw the legend only for those lines for which there is data.
@@ -95,8 +98,9 @@ class Visualizer(BaseVisualizer):
             if plt_obj is not None:
                 handles.append(plt_obj)
                 labels.append(lab)
-
         self.ax.legend(handles, labels)
+
+
 if __name__ == '__main__':
 
     def main():
