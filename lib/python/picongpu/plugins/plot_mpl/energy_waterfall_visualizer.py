@@ -169,7 +169,7 @@ if __name__ == '__main__':
 
         fig, ax = plt.subplots(1, 1)
         Visualizer(path, ax).visualize(iteration=iteration, species=species,
-                                   species_filter=filtr)
+                                       species_filter=filtr)
         plt.show()
 
     main()
