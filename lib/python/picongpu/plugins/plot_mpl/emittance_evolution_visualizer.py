@@ -22,11 +22,20 @@ class Visualizer(BaseVisualizer):
         """
         Parameters
         ----------
-        run_directory : string
-            path to the run directory of PIConGPU
-            (the path before ``simOutput/``)
+        run_directory : list of tuples of length 2
+            or single tuple of length 2.
+            Each tuple is of the following form (sim_name, sim_path)
+            and consists of strings.
+            sim_name is a short string used e.g. in plot legends.
+            sim_path leads to the run directory of PIConGPU
+            (the path before ``simOutput/``).
+            If None, the user is responsible for providing run_directories
+            later on via set_run_directories() before calling visualize().
+        ax: matplotlib.axes
         """
         super().__init__(EmittanceData, run_directories, ax)
+        self.plt_lin = None  # plots line at current itteration
+        self.cur_iteration = None
 
     def _create_plt_obj(self, idx):
         """
@@ -64,20 +73,14 @@ class Visualizer(BaseVisualizer):
         if self.cur_iteration:
             self.plt_lin = self.ax.axvline(self.cur_iteration * dt * ps,
                                            color='#FF6600')
-        self.ax.relim()
-        self.ax.autoscale_view(True, True, True)
 
-    def visualize(self, ax=None, **kwargs):
+    def visualize(self, **kwargs):
         """
         Creates a semilogy plot on the provided axes object for
         the data of the given iteration using matpotlib.
 
         Parameters
         ----------
-        iteration: int
-            the iteration number for which data will be plotted.
-        ax: matplotlib axes object
-            the part of the figure where this plot will be shown.
         kwargs: dictionary with further keyword arguments, valid are:
             species: string
                 short name of the particle species, e.g. 'e' for electrons
@@ -159,7 +162,7 @@ if __name__ == '__main__':
 
         # check that we got all args that we need
         if path is None:
-            print("Path to 'run' directory have to be provided!")
+            print("Path to 'run' directory has to be provided!")
             usage()
             sys.exit(2)
         if species is None:
@@ -170,7 +173,7 @@ if __name__ == '__main__':
             print("Species filter was not given, will use", filtr)
 
         fig, ax = plt.subplots(1, 1)
-        Visualizer(path).visualize(ax, iteration=iteration, species=species,
+        Visualizer(path, ax).visualize(iteration=iteration, species=species,
                                    species_filter=filtr)
         plt.show()
 

@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 import os
 import collections
-from picongpu.utils.find_time import FindTime
 
 
 class EmittanceData(DataReader):
@@ -130,6 +129,8 @@ class EmittanceData(DataReader):
         iteration : (unsigned) int [unitless]
             The iteration at which to read the data.
             A list of iterations is allowed as well.
+        dt: float
+            time for itteration
         """
         if iteration is not None:
             if not isinstance(iteration, collections.Iterable):
@@ -171,7 +172,7 @@ class EmittanceData(DataReader):
             raise IndexError('Iteration {} is not available!\n'
                              'List of available iterations: \n'
                              '{}'.format(iteration, data.index.values))
-        dt = FindTime(self.run_directory).get_dt()
+        dt = self.get_dt()
         if len(iteration) > 1:
             return collections.OrderedDict(zip(
                     iteration,
