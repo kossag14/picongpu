@@ -174,9 +174,6 @@ class EmittanceData(DataReader):
                              '{}'.format(iteration, data.index.values))
         dt = self.get_dt()
         if len(iteration) > 1:
-            return collections.OrderedDict(zip(
-                    iteration,
-                    data.loc[iteration].values
-                )), y_slices, iteration, dt
+            return data.loc[iteration].values, y_slices, iteration, dt
         else:
             return (data.loc[iteration].values[0, :], y_slices)

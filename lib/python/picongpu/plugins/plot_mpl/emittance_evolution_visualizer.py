@@ -46,7 +46,7 @@ class Visualizer(BaseVisualizer):
         label = self.sim_labels[idx]
         np_data = np.zeros(len(all_iterations))
         for index, ts in enumerate(all_iterations):
-            np_data[index] = emit[ts][0]
+            np_data[index] = emit[index][0]
         ps = 1.e12  # for conversion from s to ps
         # np_data * 1.e6 converts emittance to pi mm mrad
         self.plt_obj[idx], = self.ax.plot(all_iterations * dt * ps,
@@ -64,7 +64,7 @@ class Visualizer(BaseVisualizer):
         emit, y_slices, all_iterations, dt = self.data[idx]
         np_data = np.zeros(len(all_iterations))
         for index, ts in enumerate(all_iterations):
-            np_data[index] = emit[ts][0]
+            np_data[index] = emit[index][0]
         if self.plt_lin:
             self.plt_lin.remove()
         ps = 1.e12  # for conversion from s to ps
