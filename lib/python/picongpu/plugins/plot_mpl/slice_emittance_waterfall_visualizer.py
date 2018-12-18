@@ -107,7 +107,6 @@ class Visualizer(BaseVisualizer):
         self.colors = get_different_colormaps(len(run_directories))
 
     def _remove_colorbar(self, idx):
-        
         """
         Remove the colorbar for plot obj at idx.
         """
@@ -136,7 +135,7 @@ class Visualizer(BaseVisualizer):
         slice_emit, y_slices, all_iterations, dt = self.data[idx]
         np_data = np.zeros((len(y_slices), len(all_iterations)))
         for index, ts in enumerate(all_iterations):
-            np_data[:,index] = slice_emit[index][1:]
+            np_data[:, index] = slice_emit[index][1:]
         ps = 1.e12  # for conversion from s to ps
         max_iter = max(all_iterations * dt * ps)
         # np_data.T * 1.e6 converts emittance to pi mm mrad,
@@ -145,8 +144,8 @@ class Visualizer(BaseVisualizer):
                                            norm=LogNorm(), origin="lower",
                                            vmin=1e-1, vmax=1e2,
                                            extent=(0, max(y_slices*1.e6),
-                                                   0, max_iter))#,
-                                            #cmap=self.colors[idx])
+                                                   0, max_iter),
+                                           cmap=self.colors[idx])
         if self.cur_iteration:
             self.plt_lin = self.ax.axhline(self.cur_iteration * dt * ps,
                                            color='#FF6600')
@@ -215,9 +214,6 @@ class Visualizer(BaseVisualizer):
         self.ax.set_ylabel('time [ps]')
         self.ax.set_title('slice emittance for species ' +
                           species + ', filter = ' + species_filter)
-
-        # prevent squeezing of colorbars and labels
-        #self.ax.figure.tight_layout()
 
     def clear_cbar(self):
         """Clear colorbars if present."""
